@@ -1,0 +1,28 @@
+xypp-user-decoration:
+  # For more details on the format
+  # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
+  forum:
+    decoration-box:
+      error: "Unknown Type"
+      avatar: "Avatar Style"
+      username: "Username Style"
+      post: "Post Style"
+      usercard: "User Card Style"
+      loading: "Loading"
+    decoration:
+      remove_button: "Remove"
+      change_button: "Change"
+    page:
+      show-decorations: "Decorations"
+    modal:
+      title: "Offer Decoration"
+      tip: "Please select a decoration"
+      loading: "Loading"
+      button: "Offer"
+    user_controls:
+      offer: "Offer decoration"
+  admin:
+    permissions:
+      view_decoration: "View other's decoration"
+      delete_decoration: "Delete other's decoration"
+      offer_decoration: "Offer decoration"

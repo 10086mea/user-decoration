@@ -1,0 +1,28 @@
+xypp-user-decoration:
+  # For more details on the format
+  # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
+  forum:
+    decoration-box:
+      error: "未知类型"
+      avatar: "头像样式"
+      username: "用户名样式"
+      post: "发帖样式"
+      usercard: "用户卡片样式"
+      loading: "加载中"
+    decoration:
+      remove_button: "移除"
+      change_button: "修改"
+    page:
+      show-decorations: "装扮"
+    modal:
+      title: "授予装扮"
+      tip: "请选择一个装扮"
+      loading: "加载中"
+      button: "授予"
+    user_controls:
+      offer: "授予装扮"
+  admin:
+    permissions:
+      view_decoration: "查看他人装扮"
+      delete_decoration: "删除他人装扮"
+      offer_decoration: "授予他人装扮"

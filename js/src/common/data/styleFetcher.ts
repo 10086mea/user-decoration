@@ -1,0 +1,45 @@
+import UserDecorations from "../models/UserDecorations";
+import { AllApplication } from "../type";
+let StyleFetcherIns: StyleFetcher | null = null;
+
+export class StyleFetcher {
+    fetchIntervalId = -1;
+    fetchId: Record<number, ((result: UserDecorations) => void)[]> = {};
+    app: AllApplication;
+
+    constructor(app: AllApplication) {
+        StyleFetcherIns = this;
+        this.app = app;
+    }
+    public static getInstance(): StyleFetcher | null { return StyleFetcherIns; }
+    public async sendFetch() {
+        this.fetchIntervalId = -1;
+        const fetchResultHandler = this.fetchId;
+        const id = Object.keys(fetchResultHandler).map(e => parseInt(e));
+        this.fetchId = {};
+
+        //@ts-ignore
+        const fetchResult = await this.app.store.find("user_decoration", { id });
+        id.forEach((e) => {
+            fetchResultHandler[e].forEach(result => {
+                result(this.app.store.getById('user-decorations', e + "") as any);
+            })
+        })
+    }
+    public fetchStyle(id: number | string): Promise<UserDecorations | null> {
+        if (!id) {
+            return Promise.resolve(null);
+        }
+        id = parseInt(id + "");
+        const stored = this.app.store.getById('user-decorations', id + "");
+        if (stored) return Promise.resolve(stored as any);
+
+        return new Promise<UserDecorations>((resolve) => {
+            this.fetchId[id] = this.fetchId[id] || [];
+            this.fetchId[id].push(resolve);
+            if (this.fetchIntervalId == -1) {
+                this.fetchIntervalId = setTimeout(this.sendFetch.bind(this), 1000) as any;
+            }
+        })
+    }
+}
