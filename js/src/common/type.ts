@@ -5,8 +5,8 @@ import AdminApplication from "flarum/admin/AdminApplication";
 import Mithril from "mithril";
 export type AllApplication = Application | ForumApplication | AdminApplication;
 export interface userElementInfo {
-    username: string;
-    id: number;
+    username?: string;
+    id?: number;
     color?: string;
     container?: Mithril.Vnode<any, any>;
     decoration?: UserDecorations;

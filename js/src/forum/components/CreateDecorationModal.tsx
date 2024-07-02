@@ -7,6 +7,7 @@ import UserOwnDecoration from '../../common/models/UserOwnDecoration';
 import DecorationBox from './DecorationBox';
 import UserDecorations from '../../common/models/UserDecorations';
 import { StyleFetcher } from '../../common/data/styleFetcher';
+import LinkButton from 'flarum/common/components/LinkButton';
 export default class CreateDecorationModal extends Modal {
   loading = false;
   decorationId: string = '';
@@ -17,6 +18,9 @@ export default class CreateDecorationModal extends Modal {
   }
 
   title() {
+    if ((this.attrs as any).decoration_id) {
+      return app.translator.trans("xypp-user-decoration.forum.create-modal.edit-title", [(this.attrs as any).decoration_id] as any)
+    }
     return app.translator.trans('xypp-user-decoration.forum.create-modal.title');
   }
 
@@ -31,8 +35,9 @@ export default class CreateDecorationModal extends Modal {
               id="xypp-user-decoration-create-ipt-type"
               options={{
                 avatar: app.translator.trans('xypp-user-decoration.forum.create-modal.type.avatar'),
-                username: app.translator.trans('xypp-user-decoration.forum.create-modal.type.username'),
-                usercard: app.translator.trans('xypp-user-decoration.forum.create-modal.type.usercard'),
+                name: app.translator.trans('xypp-user-decoration.forum.create-modal.type.username'),
+                card: app.translator.trans('xypp-user-decoration.forum.create-modal.type.usercard'),
+                post: app.translator.trans('xypp-user-decoration.forum.create-modal.type.post'),
               }}
             ></Select>
           </div>
@@ -53,6 +58,9 @@ export default class CreateDecorationModal extends Modal {
             <Button class="Button Button--primary" type="submit" loading={this.loading} disabled={this.loading}>
               {app.translator.trans('xypp-user-decoration.forum.create-modal.button')}
             </Button>
+            <LinkButton loading={this.loading} disabled={this.loading} onclick={this.delete.bind(this)}>
+              <i class="fas fa-trash"></i>{app.translator.trans('xypp-user-decoration.forum.create-modal.delete-button')}
+            </LinkButton>
           </div>
         </div>
       </div>
@@ -71,7 +79,6 @@ export default class CreateDecorationModal extends Modal {
           this.$('#xypp-user-decoration-create-ipt-desc').val(style.desc() as string);
           this.$('#xypp-user-decoration-create-ipt-style').val(style.style() as string);
           this.$('#xypp-user-decoration-create-ipt-type').val(style.type() as string);
-
           m.redraw();
         });
     }
@@ -96,7 +103,20 @@ export default class CreateDecorationModal extends Modal {
       app.modal.close();
       app.alerts.show({ type: 'success' }, app.translator.trans('xypp-user-decoration.forum.create-success'));
     } catch (e: any) {
-      app.alerts.show({ type: 'error' }, e.toString());
+      this.loading = false;
+    }
+  }
+  async delete() {
+    if (!confirm(app.translator.trans('xypp-user-decoration.forum.delete_confirm') as string)) return;
+    this.loading = true;
+    try {
+      await app.request({
+        url: app.forum.attribute('apiUrl') + '/user_decoration/' + (this.attrs as any).decoration_id + "/delete",
+        method: 'GET',
+      });
+      app.modal.close();
+      app.alerts.show({ type: 'success' }, app.translator.trans('xypp-user-decoration.forum.delete-success'));
+    } catch (e: any) {
       this.loading = false;
     }
   }

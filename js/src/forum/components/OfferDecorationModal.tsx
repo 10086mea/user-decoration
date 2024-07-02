@@ -82,11 +82,8 @@ export default class OfferDecorationModal extends Modal {
         },
       });
       app.modal.close();
-      setRouteWithForcedRefresh('user.user_own_decoration', {
-        username: app.store.getById('users', (this.attrs as any).user_id)?.data?.attributes?.slug,
-      } as any);
+      setRouteWithForcedRefresh(app.history.getCurrent().url);
     } catch (e: any) {
-      app.alerts.show({ type: 'error' }, e.toString());
       this.loading = false;
     }
   }

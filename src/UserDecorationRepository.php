@@ -1,10 +1,10 @@
 <?php
 
-namespace Xypp\UserAvatar;
+namespace Xypp\UserDecoration;
 
 use Flarum\User\User;
 use Illuminate\Database\Eloquent\Builder;
-use Xypp\UserAvatar\UserDecoration;
+use Xypp\UserDecoration\UserDecoration;
 
 class UserDecorationRepository
 {

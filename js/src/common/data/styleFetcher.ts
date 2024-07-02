@@ -45,11 +45,15 @@ export class StyleFetcher {
             this.fetchId[id] = this.fetchId[id] || [];
             this.fetchId[id].push(resolve);
             if (this.fetchIntervalId == -1) {
-                this.fetchIntervalId = setTimeout(this.sendFetch.bind(this), 1000) as any;
+                this.fetchIntervalId = setTimeout(this.sendFetch.bind(this), 400) as any;
             }
         })
     }
     public fetchStyleSync(id: number | string): UserDecorations | undefined {
         return (this.app.store.getById('user-decorations', id + "") as UserDecorations) || undefined;
+    }
+
+    public getApp() {
+        return this.app;
     }
 }

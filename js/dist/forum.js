@@ -395,12 +395,15 @@ var StyleFetcher = /*#__PURE__*/function () {
       _this2.fetchId[id] = _this2.fetchId[id] || [];
       _this2.fetchId[id].push(resolve);
       if (_this2.fetchIntervalId == -1) {
-        _this2.fetchIntervalId = setTimeout(_this2.sendFetch.bind(_this2), 1000);
+        _this2.fetchIntervalId = setTimeout(_this2.sendFetch.bind(_this2), 400);
       }
     });
   };
   _proto.fetchStyleSync = function fetchStyleSync(id) {
     return this.app.store.getById('user-decorations', id + "") || undefined;
+  };
+  _proto.getApp = function getApp() {
+    return this.app;
   };
   return StyleFetcher;
 }();
@@ -522,227 +525,9 @@ var UserOwnDecoration = /*#__PURE__*/function (_Model) {
 
 /***/ }),
 
-/***/ "./src/common/utils/avatarHijack.ts":
-/*!******************************************!*\
-  !*** ./src/common/utils/avatarHijack.ts ***!
-  \******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   initAvatarHijack: () => (/* binding */ initAvatarHijack)
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/asyncToGenerator */ "./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
-/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
-/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! flarum/common/Component */ "flarum/common/Component");
-/* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! flarum/common/extend */ "flarum/common/extend");
-/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! flarum/common/models/User */ "flarum/common/models/User");
-/* harmony import */ var flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _utils_decorationApplier__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/decorationApplier */ "./src/common/utils/decorationApplier.ts");
-/* harmony import */ var flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! flarum/common/utils/computed */ "flarum/common/utils/computed");
-/* harmony import */ var flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! flarum/common/utils/stringToColor */ "flarum/common/utils/stringToColor");
-/* harmony import */ var flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var color_thief_browser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! color-thief-browser */ "./node_modules/color-thief-browser/dist/color-thief.min.js");
-/* harmony import */ var color_thief_browser__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(color_thief_browser__WEBPACK_IMPORTED_MODULE_8__);
-
-
-
-
-
-
-
-
-
-var globalUserAvatarHijackIid = 0;
-/**
- * @description 劫持用户头像生成.将用户信息编码到头像信息中.
- */
-function initAvatarHijack() {
-  var originalUserAvatar = (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).avatarUrl;
-  function calculateAvatarColor(user, avatarUrl) {
-    var image = new Image();
-    image.addEventListener('load', function () {
-      try {
-        var colorThief = new (color_thief_browser__WEBPACK_IMPORTED_MODULE_8___default())();
-        //@ts-ignore
-        user.avatarColor = colorThief.getColor(this);
-      } catch (e) {
-        // Completely white avatars throw errors due to a glitch in color thief
-        // See https://github.com/lokesh/color-thief/issues/40
-        if (e instanceof TypeError) {
-          //@ts-ignore
-          user.avatarColor = [255, 255, 255];
-        } else {
-          throw e;
-        }
-      }
-      user.freshness = new Date();
-      m.redraw();
-    });
-    image.crossOrigin = 'anonymous';
-    image.src = avatarUrl != null ? avatarUrl : '';
-  }
-  //@ts-ignore
-  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).realAvatarUrl = originalUserAvatar;
-  //@ts-ignore
-  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).hijackColor = function () {
-    var _this = this;
-    return flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6___default()('displayName', 'realAvatarUrl', 'avatarColor', function (displayName, avatarUrl, avatarColor) {
-      if (avatarColor) {
-        return "rgb(" + avatarColor.join(', ') + ")";
-      } else if (avatarUrl) {
-        calculateAvatarColor(_this, avatarUrl);
-        return '';
-      }
-      return '#' + flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7___default()(displayName);
-    }).call(this);
-  };
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype), "avatarUrl", function () {
-    var _this$data$attributes;
-    //@ts-ignore
-    var color = this.hijackColor();
-    if (color && !!color['charAt']) {
-      color = color.replace(/#/g, '@');
-    }
-    var encodedUserInfo = JSON.stringify({
-      decorationId: (_this$data$attributes = this.data.attributes) == null ? void 0 : _this$data$attributes.avatar_decoration,
-      username: this.username(),
-      displayName: this.displayName(),
-      id: this.id(),
-      color: color
-    });
-    //@ts-ignore
-    return (originalUserAvatar.call(this) || "").split("#").pop() + "#" + encodedUserInfo;
-  });
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['oninit'], function () {
-    this.userAvatarHijackIid = globalUserAvatarHijackIid++;
-    this.originalView = this.view.bind(this);
-    this.view = hijackViewHandler.bind(this);
-    this.originalOnBefUp = this.onbeforeupdate.bind(this);
-    this.onbeforeupdate = hijackOnBeforeUpdate.bind(this);
-  });
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['onupdate', "oncreate"], /*#__PURE__*/(0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().mark(function _callee() {
-    var ctr;
-    return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().wrap(function _callee$(_context) {
-      while (1) switch (_context.prev = _context.next) {
-        case 0:
-          ctr = $(".Avatar-container[data-userAvatarHijackIid=\"" + this.userAvatarHijackIid + "\"]");
-          if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
-            ctr.css("position", "relative");
-          }
-        case 2:
-        case "end":
-          return _context.stop();
-      }
-    }, _callee, this);
-  })));
-  console.log("Avatar Hijack loaded");
-}
-function hijackOnBeforeUpdate() {
-  //@ts-ignore
-  var injected = this.$(".user-avatar-hijack-wait-reload").length !== 0 || $(this.element).hasClass("user-avatar-hijack-wait-reload");
-  //@ts-ignore
-  $(this.element).removeClass("user-avatar-hijack-wait-reload");
-  //@ts-ignore
-  for (var _len = arguments.length, a = new Array(_len), _key = 0; _key < _len; _key++) {
-    a[_key] = arguments[_key];
-  }
-  if (this.originalOnBefUp.apply(this, a) === false) {
-    if (injected) {
-      return;
-    }
-    return false;
-  }
-  return;
-}
-function hijackViewHandler(vnode) {
-  //@ts-ignore
-  var vnodeTree = this.originalView(vnode);
-  if (!vnodeTree) return vnodeTree;
-  if (vnodeIsAvatar(vnodeTree)) {
-    //@ts-ignore
-    return createWrappedAvatar(vnodeTree, this);
-  } else {
-    //@ts-ignore
-    hijackView(null, vnodeTree, vnode, this);
-  }
-  return vnodeTree;
-}
-function hijackView(parent, root, stopAt, ctx) {
-  if (root === stopAt) return;
-  if (parent && vnodeIsAvatar(root)) {
-    parent.children = parent.children.map(function (child) {
-      if (child === root) {
-        return createWrappedAvatar(child, ctx);
-      } else return child;
-    });
-  } else if (typeof root.children === 'object' && root.children['forEach']) {
-    root.children.forEach(function (child) {
-      child && hijackView(root, child, stopAt, ctx);
-    });
-  }
-}
-function vnodeIsAvatar(vnode) {
-  var _vnode$attrs$classNam;
-  return vnode && vnode.tag == "img" && ((_vnode$attrs$classNam = vnode.attrs.className) == null ? void 0 : _vnode$attrs$classNam.includes("Avatar")) && /( |^)Avatar( |$)/.test(vnode.attrs.className) && vnode.attrs.src;
-}
-function createWrappedAvatar(vnode, ctx) {
-  var _toWarp$attrs$classNa;
-  var attrData = vnode.attrs.src.split("#");
-  if (attrData.length != 2) return vnode;
-  var toWarp = vnode;
-  var userInfo = JSON.parse(attrData.pop());
-  var avatarUrl = attrData.shift();
-  if (!avatarUrl) {
-    toWarp.tag = "span";
-    toWarp.children = [{
-      tag: "#",
-      children: userInfo.username.charAt(0),
-      state: undefined,
-      attrs: {}
-    }];
-    var color = userInfo.color;
-    if (color && !!color['charAt']) {
-      color = color.replace(/@/g, "#");
-    }
-    if (color) {
-      var _toWarp$attrs$style;
-      toWarp.attrs.style = ((_toWarp$attrs$style = toWarp.attrs.style) != null ? _toWarp$attrs$style : "") + (";--avatar-bg: " + color + ";");
-    }
-  }
-  toWarp.attrs.src = avatarUrl;
-  var ctr = {
-    tag: "span",
-    attrs: {
-      "data-ctr": "avatar"
-    },
-    state: undefined,
-    children: [toWarp]
-  };
-  ctr.attrs.style = toWarp.attrs.style;
-  ctr.attrs.className = ((_toWarp$attrs$classNa = toWarp.attrs.className) != null ? _toWarp$attrs$classNa : "") + " Avatar-container";
-  ctr.attrs['data-userAvatarHijackIid'] = ctx.userAvatarHijackIid;
-  //@ts-ignore
-  if (ctx.appendRelative) {
-    var _ctr$attrs$style;
-    ctr.attrs.style = ((_ctr$attrs$style = ctr.attrs.style) != null ? _ctr$attrs$style : "") + ";position:relative;";
-  }
-  toWarp.attrs.className = "";
-  userInfo.container = ctr;
-  (0,_utils_decorationApplier__WEBPACK_IMPORTED_MODULE_5__.applyDecoration)(userInfo, ctx);
-  return ctr;
-}
-
-/***/ }),
-
-/***/ "./src/common/utils/decorationApplier.ts":
+/***/ "./src/common/utils/DecorationApplier.ts":
 /*!***********************************************!*\
-  !*** ./src/common/utils/decorationApplier.ts ***!
+  !*** ./src/common/utils/DecorationApplier.ts ***!
   \***********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
@@ -752,7 +537,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   applyDecoration: () => (/* binding */ applyDecoration),
 /* harmony export */   applyDecorationOn: () => (/* binding */ applyDecorationOn)
 /* harmony export */ });
-/* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
+/* harmony import */ var _data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../data/styleFetcher */ "./src/common/data/styleFetcher.ts");
 
 
 /**
@@ -763,11 +548,11 @@ function applyDecoration(elementInfo, ctx) {
   if (!elementInfo.decoration) {
     if (elementInfo.decorationId) {
       var _StyleFetcher$getInst;
-      elementInfo.decoration = (_StyleFetcher$getInst = _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__.StyleFetcher.getInstance()) == null ? void 0 : _StyleFetcher$getInst.fetchStyleSync(elementInfo.decorationId);
+      elementInfo.decoration = (_StyleFetcher$getInst = _data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__.StyleFetcher.getInstance()) == null ? void 0 : _StyleFetcher$getInst.fetchStyleSync(elementInfo.decorationId);
       if (!elementInfo.decoration) {
         var _StyleFetcher$getInst2;
-        (_StyleFetcher$getInst2 = _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__.StyleFetcher.getInstance()) == null || _StyleFetcher$getInst2.fetchStyle(elementInfo.decorationId).then(function () {
-          $(ctx.element).addClass("user-avatar-hijack-wait-reload");
+        (_StyleFetcher$getInst2 = _data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__.StyleFetcher.getInstance()) == null || _StyleFetcher$getInst2.fetchStyle(elementInfo.decorationId).then(function () {
+          $(ctx.element).addClass("user-decoration-hijack-wait-reload");
           m.redraw();
         });
       }
@@ -807,6 +592,339 @@ function applyDecorationOn(element, decoration) {
 
 /***/ }),
 
+/***/ "./src/common/utils/DecorationHijack.ts":
+/*!**********************************************!*\
+  !*** ./src/common/utils/DecorationHijack.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   avatarColor: () => (/* binding */ avatarColor),
+/* harmony export */   initDecorationExtend: () => (/* binding */ initDecorationExtend),
+/* harmony export */   initDecorationHijack: () => (/* binding */ initDecorationHijack)
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/asyncToGenerator */ "./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! flarum/common/Component */ "flarum/common/Component");
+/* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! flarum/common/extend */ "flarum/common/extend");
+/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! flarum/common/models/User */ "flarum/common/models/User");
+/* harmony import */ var flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _data_styleFetcher__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../data/styleFetcher */ "./src/common/data/styleFetcher.ts");
+/* harmony import */ var _DecorationApplier__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./DecorationApplier */ "./src/common/utils/DecorationApplier.ts");
+/* harmony import */ var flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! flarum/common/utils/computed */ "flarum/common/utils/computed");
+/* harmony import */ var flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! flarum/common/utils/stringToColor */ "flarum/common/utils/stringToColor");
+/* harmony import */ var flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var color_thief_browser__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! color-thief-browser */ "./node_modules/color-thief-browser/dist/color-thief.min.js");
+/* harmony import */ var color_thief_browser__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(color_thief_browser__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var flarum_forum_components_Post__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! flarum/forum/components/Post */ "flarum/forum/components/Post");
+/* harmony import */ var flarum_forum_components_Post__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_components_Post__WEBPACK_IMPORTED_MODULE_10__);
+/* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! flarum/forum/components/UserCard */ "flarum/forum/components/UserCard");
+/* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11__);
+
+
+
+
+
+
+
+
+
+
+
+
+var globalUserDecorationHijackIid = 0;
+function usernameHijack() {
+  var _StyleFetcher$getInst;
+  return (_StyleFetcher$getInst = _data_styleFetcher__WEBPACK_IMPORTED_MODULE_5__.StyleFetcher.getInstance()) == null || (_StyleFetcher$getInst = _StyleFetcher$getInst.getApp().forum) == null ? void 0 : _StyleFetcher$getInst.attribute("username_hijack");
+}
+function avatarHijack() {
+  var _StyleFetcher$getInst2;
+  return (_StyleFetcher$getInst2 = _data_styleFetcher__WEBPACK_IMPORTED_MODULE_5__.StyleFetcher.getInstance()) == null || (_StyleFetcher$getInst2 = _StyleFetcher$getInst2.getApp().forum) == null ? void 0 : _StyleFetcher$getInst2.attribute("avatar_hijack");
+}
+function initDecorationHijack() {
+  var originalUserAvatar = (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).avatarUrl;
+  //@ts-ignore
+  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).realAvatarUrl = originalUserAvatar;
+  //@ts-ignore
+  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).hijackColor = function () {
+    var _this = this;
+    return flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_7___default()('displayName', 'realAvatarUrl', 'avatarColor', function (displayName, avatarUrl, avatarColor) {
+      if (avatarColor) {
+        return "rgb(" + avatarColor.join(', ') + ")";
+      } else if (avatarUrl) {
+        calculateAvatarColor(_this, avatarUrl);
+        return '';
+      }
+      return '#' + flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_8___default()(displayName);
+    }).call(this);
+  };
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype), "avatarUrl", function () {
+    var _this$data$attributes;
+    if (!avatarHijack()) return originalUserAvatar.call(this);
+    //@ts-ignore
+    var color = this.hijackColor();
+    if (color && !!color['charAt']) {
+      color = color.replace(/#/g, '@');
+    }
+    var encodedUserInfo = JSON.stringify({
+      decorationId: (_this$data$attributes = this.data.attributes) == null ? void 0 : _this$data$attributes.avatar_decoration,
+      username: this.username(),
+      displayName: this.displayName(),
+      id: this.id(),
+      color: color
+    });
+    //@ts-ignore
+    return (originalUserAvatar.call(this) || "").split("#").pop() + "#" + encodedUserInfo;
+  });
+  var originalUserName = (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).username;
+  //@ts-ignore
+  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).realUserName = originalUserName;
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype), "displayName", function (orgUserName) {
+    if (!usernameHijack()) return orgUserName();
+    return orgUserName() + "@" + this.id();
+  });
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['oninit'], function () {
+    if (!usernameHijack() && !avatarHijack()) return;
+    this.userDecorationHijackIid = globalUserDecorationHijackIid++;
+    this.originalView = this.view.bind(this);
+    this.view = hijackViewHandler.bind(this);
+    this.originalOnBefUp = this.onbeforeupdate.bind(this);
+    this.onbeforeupdate = hijackOnBeforeUpdate.bind(this);
+  });
+
+  // This function should be save and not to control it.
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['onupdate', "oncreate"], /*#__PURE__*/(0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().mark(function _callee() {
+    var ctr;
+    return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().wrap(function _callee$(_context) {
+      while (1) switch (_context.prev = _context.next) {
+        case 0:
+          ctr = $(".decoration-container[data-userDecorationHijackIid=\"" + this.userDecorationHijackIid + "\"]");
+          if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
+            ctr.css("position", "relative");
+          }
+        case 2:
+        case "end":
+          return _context.stop();
+      }
+    }, _callee, this);
+  })));
+  console.log("Decoration Hijack loaded");
+}
+function initDecorationExtend() {
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_forum_components_Post__WEBPACK_IMPORTED_MODULE_10___default().prototype), "view", function (o) {
+    //@ts-ignore
+    this.userDecorationHijackIid = this.userDecorationHijackIid || globalUserDecorationHijackIid++;
+    //@ts-ignore
+    for (var _len = arguments.length, a = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      a[_key - 1] = arguments[_key];
+    }
+    var tree = o(a);
+    //@ts-ignore
+    tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
+    tree.attrs.className = (tree.attrs.className || "") + " decoration-container";
+    //@ts-ignore
+    var user = this.attrs.post.user();
+    var infoElem = {
+      username: user.realUserName(),
+      container: tree,
+      id: user.id(),
+      decorationId: user.attribute("post_decoration")
+    };
+    //@ts-ignore
+    if (this.attrs.decoration_id) infoElem.decorationId = this.attrs.decoration_id;
+    (0,_DecorationApplier__WEBPACK_IMPORTED_MODULE_6__.applyDecoration)(infoElem, this);
+    return tree;
+  });
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11___default().prototype), "view", function (o) {
+    //@ts-ignore
+    this.userDecorationHijackIid = this.userDecorationHijackIid || globalUserDecorationHijackIid++;
+    //@ts-ignore
+    for (var _len2 = arguments.length, a = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+      a[_key2 - 1] = arguments[_key2];
+    }
+    var tree = o(a);
+    //@ts-ignore
+    tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
+    tree.attrs.className = (tree.attrs.className || "") + " decoration-container";
+    //@ts-ignore
+    var user = this.attrs.user;
+    var infoElem = {
+      username: user.realUserName(),
+      container: tree,
+      id: user.id(),
+      decorationId: user.attribute("card_decoration")
+    };
+    //@ts-ignore
+    if (this.attrs.decoration_id) infoElem.decorationId = this.attrs.decoration_id;
+    (0,_DecorationApplier__WEBPACK_IMPORTED_MODULE_6__.applyDecoration)(infoElem, this);
+    return tree;
+  });
+}
+function hijackOnBeforeUpdate() {
+  //@ts-ignore
+  var injected = this.$(".user-decoration-hijack-wait-reload").length !== 0 || $(this.element).hasClass("user-decoration-hijack-wait-reload");
+  //@ts-ignore
+  $(this.element).removeClass("user-decoration-hijack-wait-reload");
+  //@ts-ignore
+  for (var _len3 = arguments.length, a = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    a[_key3] = arguments[_key3];
+  }
+  if (this.originalOnBefUp.apply(this, a) === false) {
+    if (injected) {
+      return;
+    }
+    return false;
+  }
+  return;
+}
+function hijackViewHandler(vnode) {
+  //@ts-ignore
+  var vnodeTree = this.originalView(vnode);
+  if (!vnodeTree) return vnodeTree;
+  if (vnodeIsAvatar(vnodeTree)) {
+    //@ts-ignore
+    return createWrappedAvatar(vnodeTree, this);
+  } else {
+    //@ts-ignore
+    hijackView(null, vnodeTree, vnode, this);
+  }
+  return vnodeTree;
+}
+function hijackView(parent, root, stopAt, ctx) {
+  if (root === stopAt) return;
+  if (parent && vnodeIsAvatar(root)) {
+    parent.children = parent.children.map(function (child) {
+      if (child === root) {
+        return createWrappedAvatar(child, ctx);
+      } else return child;
+    });
+  } else if (parent && vnodeIsUsername(root)) {
+    parent.children = parent.children.map(function (child) {
+      if (child === root) {
+        return createWrappedUsername(child, ctx);
+      } else return child;
+    });
+  } else if (typeof root.children === 'object' && root.children['forEach']) {
+    root.children.forEach(function (child) {
+      child && hijackView(root, child, stopAt, ctx);
+    });
+  }
+}
+function vnodeIsAvatar(vnode) {
+  var _vnode$attrs$classNam;
+  return vnode && vnode.tag == "img" && ((_vnode$attrs$classNam = vnode.attrs.className) == null ? void 0 : _vnode$attrs$classNam.includes("Avatar")) && /( |^)Avatar( |$)/.test(vnode.attrs.className) && vnode.attrs.src;
+}
+function vnodeIsUsername(vnode) {
+  var _vnode$attrs$classNam2;
+  return vnode && vnode.tag == "span" && ((_vnode$attrs$classNam2 = vnode.attrs.className) == null ? void 0 : _vnode$attrs$classNam2.includes("username")) && /( |^)username( |$)/.test(vnode.attrs.className);
+}
+function createWrappedAvatar(vnode, ctx) {
+  var _toWarp$attrs$classNa;
+  var attrData = vnode.attrs.src.split("#");
+  if (attrData.length != 2) return vnode;
+  var toWarp = vnode;
+  var userInfo = JSON.parse(attrData.pop());
+  var avatarUrl = attrData.shift();
+  if (!avatarUrl) {
+    var _userInfo$username;
+    toWarp.tag = "span";
+    toWarp.children = [{
+      tag: "#",
+      children: (_userInfo$username = userInfo.username) == null ? void 0 : _userInfo$username.charAt(0),
+      state: undefined,
+      attrs: {}
+    }];
+    var color = userInfo.color;
+    if (color && !!color['charAt']) {
+      color = color.replace(/@/g, "#");
+    }
+    if (color) {
+      var _toWarp$attrs$style;
+      toWarp.attrs.style = ((_toWarp$attrs$style = toWarp.attrs.style) != null ? _toWarp$attrs$style : "") + (";--avatar-bg: " + color + ";");
+    }
+  }
+  toWarp.attrs.src = avatarUrl;
+  var ctr = {
+    tag: "span",
+    attrs: {
+      "data-ctr": "avatar"
+    },
+    state: undefined,
+    children: [toWarp]
+  };
+  ctr.attrs.style = toWarp.attrs.style;
+  ctr.attrs.className = ((_toWarp$attrs$classNa = toWarp.attrs.className) != null ? _toWarp$attrs$classNa : "") + " Avatar-container decoration-container";
+  ctr.attrs['data-userDecorationHijackIid'] = ctx.userDecorationHijackIid;
+  //@ts-ignore
+  if (ctx.appendRelative) {
+    var _ctr$attrs$style;
+    ctr.attrs.style = ((_ctr$attrs$style = ctr.attrs.style) != null ? _ctr$attrs$style : "") + ";position:relative;";
+  }
+  toWarp.attrs.className = "";
+  userInfo.container = ctr;
+  (0,_DecorationApplier__WEBPACK_IMPORTED_MODULE_6__.applyDecoration)(userInfo, ctx);
+  return ctr;
+}
+function createWrappedUsername(vnode, ctx) {
+  var _toWarp$text, _StyleFetcher$getInst3;
+  var toWarp = vnode;
+  var un = (_toWarp$text = toWarp.text) == null ? void 0 : _toWarp$text.toString();
+  var unProps = un == null ? void 0 : un.split("@");
+  if (!unProps || (unProps == null ? void 0 : unProps.length) < 2) return vnode;
+  var user = (_StyleFetcher$getInst3 = _data_styleFetcher__WEBPACK_IMPORTED_MODULE_5__.StyleFetcher.getInstance()) == null ? void 0 : _StyleFetcher$getInst3.getApp().store.getById("users", unProps.pop());
+  if (!user) return vnode;
+  var userInfo = {
+    username: user.attribute("username"),
+    decorationId: user.attribute("name_decoration")
+  };
+  toWarp.text = userInfo.username;
+  var ctr = {
+    tag: "span",
+    children: [toWarp],
+    attrs: {
+      className: "username-container  decoration-container " + toWarp.attrs.className
+    },
+    state: undefined
+  };
+  ctr.attrs['data-userDecorationHijackIid'] = ctx.userDecorationHijackIid;
+  toWarp.attrs.className = "username-text";
+  userInfo.container = ctr;
+  (0,_DecorationApplier__WEBPACK_IMPORTED_MODULE_6__.applyDecoration)(userInfo, ctx);
+  return ctr;
+}
+function calculateAvatarColor(user, avatarUrl) {
+  var image = new Image();
+  image.addEventListener('load', function () {
+    try {
+      var colorThief = new (color_thief_browser__WEBPACK_IMPORTED_MODULE_9___default())();
+      //@ts-ignore
+      user.avatarColor = colorThief.getColor(this);
+    } catch (e) {
+      // Completely white avatars throw errors due to a glitch in color thief
+      // See https://github.com/lokesh/color-thief/issues/40
+      if (e instanceof TypeError) {
+        //@ts-ignore
+        user.avatarColor = [255, 255, 255];
+      } else {
+        throw e;
+      }
+    }
+    user.freshness = new Date();
+    m.redraw();
+  });
+  image.crossOrigin = 'anonymous';
+  image.src = avatarUrl != null ? avatarUrl : '';
+}
+var avatarColor = calculateAvatarColor;
+
+/***/ }),
+
 /***/ "./src/forum/components/CreateDecorationModal.tsx":
 /*!********************************************************!*\
   !*** ./src/forum/components/CreateDecorationModal.tsx ***!
@@ -831,6 +949,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! flarum/common/components/Select */ "flarum/common/components/Select");
 /* harmony import */ var flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6__);
 /* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
+/* harmony import */ var flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! flarum/common/components/LinkButton */ "flarum/common/components/LinkButton");
+/* harmony import */ var flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8__);
+
 
 
 
@@ -857,6 +978,9 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
     return 'Modal--small';
   };
   _proto.title = function title() {
+    if (this.attrs.decoration_id) {
+      return flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans("xypp-user-decoration.forum.create-modal.edit-title", [this.attrs.decoration_id]);
+    }
     return flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.title');
   };
   _proto.content = function content() {
@@ -873,8 +997,9 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
       id: "xypp-user-decoration-create-ipt-type",
       options: {
         avatar: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.type.avatar'),
-        username: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.type.username'),
-        usercard: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.type.usercard')
+        name: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.type.username'),
+        card: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.type.usercard'),
+        post: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.type.post')
       }
     })), m("div", {
       className: "Form-group"
@@ -910,7 +1035,13 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
       type: "submit",
       loading: this.loading,
       disabled: this.loading
-    }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.button')))));
+    }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.button')), m((flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8___default()), {
+      loading: this.loading,
+      disabled: this.loading,
+      onclick: this["delete"].bind(this)
+    }, m("i", {
+      "class": "fas fa-trash"
+    }), flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.delete-button')))));
   };
   _proto.onready = function onready() {
     var _this2 = this;
@@ -956,16 +1087,13 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
             flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().alerts.show({
               type: 'success'
             }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-success'));
-            _context.next = 13;
+            _context.next = 12;
             break;
           case 9:
             _context.prev = 9;
             _context.t0 = _context["catch"](2);
-            flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().alerts.show({
-              type: 'error'
-            }, _context.t0.toString());
             this.loading = false;
-          case 13:
+          case 12:
           case "end":
             return _context.stop();
         }
@@ -975,6 +1103,46 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
       return _onsubmit.apply(this, arguments);
     }
     return onsubmit;
+  }();
+  _proto["delete"] = /*#__PURE__*/function () {
+    var _delete2 = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee2() {
+      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().wrap(function _callee2$(_context2) {
+        while (1) switch (_context2.prev = _context2.next) {
+          case 0:
+            if (confirm(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.delete_confirm'))) {
+              _context2.next = 2;
+              break;
+            }
+            return _context2.abrupt("return");
+          case 2:
+            this.loading = true;
+            _context2.prev = 3;
+            _context2.next = 6;
+            return flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().request({
+              url: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().forum.attribute('apiUrl') + '/user_decoration/' + this.attrs.decoration_id + "/delete",
+              method: 'GET'
+            });
+          case 6:
+            flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().modal.close();
+            flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().alerts.show({
+              type: 'success'
+            }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.delete-success'));
+            _context2.next = 13;
+            break;
+          case 10:
+            _context2.prev = 10;
+            _context2.t0 = _context2["catch"](3);
+            this.loading = false;
+          case 13:
+          case "end":
+            return _context2.stop();
+        }
+      }, _callee2, this, [[3, 10]]);
+    }));
+    function _delete() {
+      return _delete2.apply(this, arguments);
+    }
+    return _delete;
   }();
   return CreateDecorationModal;
 }((flarum_common_components_Modal__WEBPACK_IMPORTED_MODULE_3___default()));
@@ -1009,6 +1177,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_8__);
 /* harmony import */ var flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! flarum/common/utils/setRouteWithForcedRefresh */ "flarum/common/utils/setRouteWithForcedRefresh");
 /* harmony import */ var flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9__);
+/* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! flarum/forum/components/UserCard */ "flarum/forum/components/UserCard");
+/* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10__);
+/* harmony import */ var _utils_fakePost__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../utils/fakePost */ "./src/forum/utils/fakePost.tsx");
+/* harmony import */ var _common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../common/utils/DecorationApplier */ "./src/common/utils/DecorationApplier.ts");
+
+
+
 
 
 
@@ -1050,7 +1225,6 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
     this.id = this.attrs['decoration_id'];
     this.type = this.attrs['type'];
     this.uodId = this.attrs['user_own_decoration_id'];
-    m.redraw();
   };
   _proto.change = /*#__PURE__*/function () {
     var _change = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee() {
@@ -1089,7 +1263,9 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
     var decorationObj = {
       id: parseInt(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session.user.id() || ''),
       username: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session.user.username(),
-      decorationId: this.id
+      decorationId: this.id,
+      //@ts-ignore
+      color: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session.user.hijackColor().replace(/\#/g, "@")
     };
     this.decoration = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().store.getById('user-decorations', decorationObj.decorationId + '');
     if (!this.decoration) {
@@ -1101,24 +1277,66 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
     if (this.changing) {
       content = m((flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_8___default()), null);
     } else if (this.type == 'avatar') {
-      var _app$session$user, _app$session$user2;
+      var _app$session$user;
       this.isCurrent = this.decoration && ((_app$session$user = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user = _app$session$user.data.attributes) == null ? void 0 : _app$session$user.avatar_decoration) == this.decoration.id();
-      content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.avatar')), m("div", {
-        "class": "avatar-box",
-        "data-uiid": this.id
-      }, m("img", {
-        title: "-",
-        "class": "Avatar",
-        src:
-        //@ts-ignore
-        (((_app$session$user2 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user2.realAvatarUrl()) || '') + '#' + JSON.stringify(decorationObj)
-      })), m("div", {
-        "class": "decoration-box-content"
-      }, this.decoration ? this.decoration.desc() : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.loading'))];
+      if (!flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().forum.attribute("username_hijack")) {
+        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.avatar')), m("div", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.closed'))];
+      } else {
+        var _app$session$user2;
+        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.avatar')), m("div", {
+          "class": "avatar-box",
+          "data-uiid": this.id
+        }, m("img", {
+          title: "-",
+          "class": "Avatar",
+          src:
+          //@ts-ignore
+          (((_app$session$user2 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user2.realAvatarUrl()) || '') + '#' + JSON.stringify(decorationObj)
+        }))];
+      }
+    } else if (this.type == 'name') {
+      var _app$session$user3, _this$decoration;
+      this.isCurrent = this.decoration && ((_app$session$user3 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user3 = _app$session$user3.data.attributes) == null ? void 0 : _app$session$user3.name_decoration) == ((_this$decoration = this.decoration) == null ? void 0 : _this$decoration.id());
+      if (!flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().forum.attribute("username_hijack")) {
+        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.name')), m("div", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.closed'))];
+      } else {
+        var _app$session$user4;
+        var decorated = m("span", {
+          "class": "username-container username"
+        }, m("span", {
+          "class": "username-text"
+        }, //@ts-ignore
+        (_app$session$user4 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user4.realUserName()));
+        if (this.decoration) (0,_common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__.applyDecorationOn)(decorated, this.decoration);
+        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.name')), m("div", null, decorated)];
+      }
+    } else if (this.type == "card") {
+      var _app$session$user5, _this$decoration2, _this$decoration3;
+      this.isCurrent = this.decoration && ((_app$session$user5 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user5 = _app$session$user5.data.attributes) == null ? void 0 : _app$session$user5.card_decoration) == ((_this$decoration2 = this.decoration) == null ? void 0 : _this$decoration2.id());
+      content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.card')), m("div", {
+        "class": "decoration-box-card-container"
+      }, m((flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10___default()), {
+        user: (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user,
+        controlsButtonClassName: "UserCard-controls App-primaryControl",
+        className: "UserCard--popover in",
+        decoration_id: (_this$decoration3 = this.decoration) == null ? void 0 : _this$decoration3.id()
+      }))];
+    } else if (this.type == "post") {
+      var _app$session$user6, _this$decoration4;
+      this.isCurrent = this.decoration && ((_app$session$user6 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user6 = _app$session$user6.data.attributes) == null ? void 0 : _app$session$user6.post_decoration) == ((_this$decoration4 = this.decoration) == null ? void 0 : _this$decoration4.id());
+      var afterDecoration = (0,_utils_fakePost__WEBPACK_IMPORTED_MODULE_11__.generatePost)((flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user);
+      if (this.decoration) (0,_common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__.applyDecorationOn)(afterDecoration, this.decoration);
+      content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.post')), m("div", {
+        "class": "decoration-box-card-container"
+      }, afterDecoration)];
     }
     return m("div", {
       className: "DecorationBox"
-    }, content, this.attrs.noBtn ? '' : m((flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_6___default()), {
+    }, m("div", {
+      className: "prev-warpper"
+    }, content), m("div", {
+      "class": "decoration-box-content"
+    }, this.decoration ? this.decoration.desc() : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.loading')), this.attrs.noBtn ? '' : m((flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_6___default()), {
       "class": "Button Button--primary",
       loading: this.changing,
       disabled: this.changing,
@@ -1127,7 +1345,7 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
       "class": "delete-decoration",
       onclick: this["delete"].bind(this)
     }, m("i", {
-      "class": "fas fa-trash",
+      "class": "fas fa-times",
       "aria-label": flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.delete_button')
     })), this.attrs.noEdit ? '' : m("div", {
       "class": "edit-decoration",
@@ -1139,7 +1357,6 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
   };
   _proto["delete"] = /*#__PURE__*/function () {
     var _delete2 = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee2() {
-      var _app$store$getById;
       return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().wrap(function _callee2$(_context2) {
         while (1) switch (_context2.prev = _context2.next) {
           case 0:
@@ -1154,9 +1371,7 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
             });
           case 4:
             this.changing = false;
-            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9___default()('user.user_own_decoration', {
-              username: (_app$store$getById = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().store.getById('users', this.attrs.user_id)) == null || (_app$store$getById = _app$store$getById.data) == null || (_app$store$getById = _app$store$getById.attributes) == null ? void 0 : _app$store$getById.slug
-            });
+            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().history.getCurrent().url);
           case 6:
           case "end":
             return _context2.stop();
@@ -1229,6 +1444,11 @@ var DecorationPage = /*#__PURE__*/function (_UserPage) {
   _proto.oninit = function oninit(vnode) {
     _UserPage.prototype.oninit.call(this, vnode);
     this.loadUser(m.route.param('username'));
+  };
+  _proto.oncreate = function oncreate(vnode) {};
+  _proto.onupdate = function onupdate(vnode) {};
+  _proto.show = function show(user) {
+    _UserPage.prototype.show.call(this, user);
     this.loadData();
   };
   _proto.content = function content() {
@@ -1251,7 +1471,7 @@ var DecorationPage = /*#__PURE__*/function (_UserPage) {
       var _this2$user, _app$session$user, _app$session$user2;
       return m(_DecorationBox__WEBPACK_IMPORTED_MODULE_6__["default"], {
         type: item.decoration_type(),
-        user_own_decoration_id: item.id(),
+        user_own_decoration_id: !item.attribute("fake") && item.id(),
         decoration_id: item.decoration_id(),
         noBtn: ((_this2$user = _this2.user) == null ? void 0 : _this2$user.id()) != ((_app$session$user = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().session).user) == null ? void 0 : _app$session$user.id()),
         noDelete: !((_app$session$user2 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().session).user) != null && _app$session$user2.canDeleteDecoration()),
@@ -1261,20 +1481,53 @@ var DecorationPage = /*#__PURE__*/function (_UserPage) {
   };
   _proto.loadData = /*#__PURE__*/function () {
     var _loadData = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee() {
-      var _this$user;
+      var _this$user, _this$user2;
+      var payload, i;
       return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
+            if (!(this.record != null)) {
+              _context.next = 2;
+              break;
+            }
+            return _context.abrupt("return");
+          case 2:
+            if ((_this$user = this.user) != null && _this$user.id()) {
+              _context.next = 4;
+              break;
+            }
+            return _context.abrupt("return");
+          case 4:
+            if (!this.loading) {
+              _context.next = 6;
+              break;
+            }
+            return _context.abrupt("return");
+          case 6:
             this.loading = true;
-            _context.next = 3;
-            return flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().store.find('user-own-decoration', {
-              id: (_this$user = this.user) == null ? void 0 : _this$user.id()
+            flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().store.all("user-own-decoration").forEach(function (m) {
+              flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().store.remove(m);
             });
-          case 3:
-            this.record = flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().store.all('user-own-decoration');
+            m.redraw();
+            _context.next = 11;
+            return flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().request({
+              url: flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().forum.attribute('apiUrl') + '/user-own-decoration?id=' + ((_this$user2 = this.user) == null ? void 0 : _this$user2.id()),
+              method: 'GET'
+            });
+          case 11:
+            payload = _context.sent;
+            i = 1;
+            payload.data.forEach(function (element) {
+              return i = Math.max(i, element.id || 0);
+            });
+            payload.data.forEach(function (element) {
+              element.attributes.fake = !element.id;
+              element.id = element.id || ++i;
+            });
+            this.record = flarum_forum_app__WEBPACK_IMPORTED_MODULE_5___default().store.pushPayload(payload);
             this.loading = false;
             m.redraw();
-          case 6:
+          case 18:
           case "end":
             return _context.stop();
         }
@@ -1395,7 +1648,6 @@ var OfferDecorationModal = /*#__PURE__*/function (_Modal) {
   };
   _proto.offer = /*#__PURE__*/function () {
     var _offer = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee() {
-      var _app$store$getById;
       return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
@@ -1414,19 +1666,14 @@ var OfferDecorationModal = /*#__PURE__*/function (_Modal) {
             });
           case 4:
             flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().modal.close();
-            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default()('user.user_own_decoration', {
-              username: (_app$store$getById = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().store.getById('users', this.attrs.user_id)) == null || (_app$store$getById = _app$store$getById.data) == null || (_app$store$getById = _app$store$getById.attributes) == null ? void 0 : _app$store$getById.slug
-            });
-            _context.next = 12;
+            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().history.getCurrent().url);
+            _context.next = 11;
             break;
           case 8:
             _context.prev = 8;
             _context.t0 = _context["catch"](1);
-            flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().alerts.show({
-              type: 'error'
-            }, _context.t0.toString());
             this.loading = false;
-          case 12:
+          case 11:
           case "end":
             return _context.stop();
         }
@@ -1454,7 +1701,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_forum_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! flarum/forum/app */ "flarum/forum/app");
 /* harmony import */ var flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_app__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
-/* harmony import */ var _common_utils_avatarHijack__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../common/utils/avatarHijack */ "./src/common/utils/avatarHijack.ts");
+/* harmony import */ var _common_utils_DecorationHijack__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../common/utils/DecorationHijack */ "./src/common/utils/DecorationHijack.ts");
 /* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! flarum/common/extend */ "flarum/common/extend");
 /* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var flarum_forum_components_UserPage__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! flarum/forum/components/UserPage */ "flarum/forum/components/UserPage");
@@ -1494,8 +1741,9 @@ flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default().initializers.add('xypp/u
   (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_10___default().prototype).canCreateDecoration = flarum_common_Model__WEBPACK_IMPORTED_MODULE_11___default().attribute('canCreateDecoration');
   //@ts-ignore
   (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_10___default().prototype).canDeleteDecoration = flarum_common_Model__WEBPACK_IMPORTED_MODULE_11___default().attribute('canDeleteDecoration');
-  new _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_1__.StyleFetcher((flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default())).done(m.redraw.sync);
-  (0,_common_utils_avatarHijack__WEBPACK_IMPORTED_MODULE_2__.initAvatarHijack)();
+  new _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_1__.StyleFetcher((flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default()));
+  (0,_common_utils_DecorationHijack__WEBPACK_IMPORTED_MODULE_2__.initDecorationHijack)();
+  (0,_common_utils_DecorationHijack__WEBPACK_IMPORTED_MODULE_2__.initDecorationExtend)();
   (flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default().routes)['user.user_own_decoration'] = {
     path: '/u/:username/user_own_decoration',
     component: _forum_components_DecorationPage__WEBPACK_IMPORTED_MODULE_6__.DecorationPage
@@ -1529,6 +1777,60 @@ flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default().initializers.add('xypp/u
     (0,_utils_storeBox__WEBPACK_IMPORTED_MODULE_12__.storeBox)((flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default()));
   }
 });
+
+/***/ }),
+
+/***/ "./src/forum/utils/fakePost.tsx":
+/*!**************************************!*\
+  !*** ./src/forum/utils/fakePost.tsx ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   generatePost: () => (/* binding */ generatePost)
+/* harmony export */ });
+/* harmony import */ var flarum_common_helpers_avatar__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! flarum/common/helpers/avatar */ "flarum/common/helpers/avatar");
+/* harmony import */ var flarum_common_helpers_avatar__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(flarum_common_helpers_avatar__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var flarum_common_helpers_username__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! flarum/common/helpers/username */ "flarum/common/helpers/username");
+/* harmony import */ var flarum_common_helpers_username__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(flarum_common_helpers_username__WEBPACK_IMPORTED_MODULE_1__);
+
+
+function generatePost(user) {
+  return m("div", {
+    "class": "PostStream-item",
+    "data-index": "0",
+    "data-time": "2024-06-27T15:05:51.000Z",
+    "data-number": "1",
+    "data-id": "1",
+    "data-type": "comment"
+  }, m("article", {
+    "class": "CommentPost Post Post--by-actor Post--by-start-user"
+  }, m("div", null, m("header", {
+    "class": "Post-header"
+  }, m("ul", null, m("li", {
+    "class": "item-user"
+  }, m("div", {
+    "class": "PostUser"
+  }, m("h3", {
+    "class": "PostUser-name"
+  }, m("a", null, flarum_common_helpers_avatar__WEBPACK_IMPORTED_MODULE_0___default()(user), m("span", {
+    "class": "UserOnline"
+  }), flarum_common_helpers_username__WEBPACK_IMPORTED_MODULE_1___default()(user))))))), m("aside", {
+    "class": "Post-actions"
+  }, m("ul", null, m("li", null, m("div", {
+    "class": "ButtonGroup Dropdown dropdown Post-controls itemCount3"
+  }, m("button", {
+    "class": "Dropdown-toggle Button Button--icon Button--flat",
+    "aria-haspopup": "menu",
+    "aria-label": "Toggle post controls dropdown menu",
+    "data-toggle": "dropdown"
+  }, m("i", {
+    "aria-hidden": "true",
+    "class": "icon fas fa-ellipsis-h Button-icon"
+  })))))))));
+}
 
 /***/ }),
 
@@ -1667,6 +1969,28 @@ module.exports = flarum.core.compat['common/extenders'];
 
 /***/ }),
 
+/***/ "flarum/common/helpers/avatar":
+/*!**************************************************************!*\
+  !*** external "flarum.core.compat['common/helpers/avatar']" ***!
+  \**************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = flarum.core.compat['common/helpers/avatar'];
+
+/***/ }),
+
+/***/ "flarum/common/helpers/username":
+/*!****************************************************************!*\
+  !*** external "flarum.core.compat['common/helpers/username']" ***!
+  \****************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = flarum.core.compat['common/helpers/username'];
+
+/***/ }),
+
 /***/ "flarum/common/models/User":
 /*!***********************************************************!*\
   !*** external "flarum.core.compat['common/models/User']" ***!
@@ -1719,6 +2043,28 @@ module.exports = flarum.core.compat['common/utils/stringToColor'];
 
 "use strict";
 module.exports = flarum.core.compat['forum/app'];
+
+/***/ }),
+
+/***/ "flarum/forum/components/Post":
+/*!**************************************************************!*\
+  !*** external "flarum.core.compat['forum/components/Post']" ***!
+  \**************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = flarum.core.compat['forum/components/Post'];
+
+/***/ }),
+
+/***/ "flarum/forum/components/UserCard":
+/*!******************************************************************!*\
+  !*** external "flarum.core.compat['forum/components/UserCard']" ***!
+  \******************************************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = flarum.core.compat['forum/components/UserCard'];
 
 /***/ }),
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace Xypp\UserAvatar\Utils;
+namespace Xypp\UserDecoration\Utils;
 
-use Xypp\UserAvatar\UserOwnDecoration;
+use Xypp\UserDecoration\UserOwnDecoration;
 
 class UserOwnDecorationUtil
 {

@@ -1,7 +1,7 @@
 import Mithril from "mithril";
 import UserDecorations from "../models/UserDecorations";
 import { userElementInfo } from "../type";
-import { StyleFetcher } from "../../common/data/styleFetcher";
+import { StyleFetcher } from "../data/styleFetcher";
 
 /**
  * 在用户界面对象上应用样式
@@ -13,7 +13,7 @@ export function applyDecoration(elementInfo: userElementInfo, ctx: any) {
             elementInfo.decoration = StyleFetcher.getInstance()?.fetchStyleSync(elementInfo.decorationId);
             if (!elementInfo.decoration) {
                 StyleFetcher.getInstance()?.fetchStyle(elementInfo.decorationId).then(() => {
-                    $(ctx.element).addClass("user-avatar-hijack-wait-reload");
+                    $(ctx.element).addClass("user-decoration-hijack-wait-reload");
                     m.redraw();
                 });
             }

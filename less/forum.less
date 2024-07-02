@@ -4,27 +4,39 @@
   justify-content: start;
   text-align: center;
 }
+
 .decoration-page-container {
   width: 100%;
 }
+
 .decoration-page-title {
   display: flex;
   justify-content: space-between;
 }
+
 .DecorationBox {
   text-align: center;
   flex-basis: 200px;
+  flex-grow: 0;
   height: 200px;
   border-radius: 5px;
   margin: 3px;
   box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.2);
   position: relative;
+  width: 200px;
+
   .Button {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
   }
+
+  .prev-warpper {
+    height: 105px;
+    overflow: hidden;
+  }
+
   .delete-decoration {
     position: absolute;
     right: 0;
@@ -35,6 +47,7 @@
     opacity: 0.1;
     transition: opacity 0.5s;
   }
+
   .delete-decoration:hover {
     opacity: 1;
     cursor: pointer;
@@ -50,11 +63,36 @@
     opacity: 0.1;
     transition: opacity 0.5s;
   }
+
   .edit-decoration:hover {
     opacity: 1;
     cursor: pointer;
   }
+
+  .decoration-box-card-container {
+    width: 100%;
+    overflow: hidden;
+
+    .UserCard {
+      transform: scale(0.4);
+      transform-origin: left top;
+    }
+
+    .PostStream-item {
+      width: 334px;
+      transform: scale(.5);
+      transform-origin: left top;
+      text-align: left;
+      height: 101px;
+
+      .Post {
+        padding: 3px;
+        margin: 0;
+      }
+    }
+  }
 }
+
 .UserCard-avatar .has-user-decoration.Avatar {
   border: 0;
   padding: 4px;
@@ -66,4 +104,6 @@
   height: 140px;
   border-bottom: gray 1px solid;
   border-top: gray 1px solid;
+  overflow: hidden;
+  width: 100%;
 }

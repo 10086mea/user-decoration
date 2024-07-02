@@ -1,6 +1,6 @@
 import app from 'flarum/forum/app';
 import { StyleFetcher } from '../common/data/styleFetcher';
-import { initAvatarHijack } from '../common/utils/avatarHijack';
+import { initDecorationExtend, initDecorationHijack } from '../common/utils/DecorationHijack';
 import { extend, override } from 'flarum/common/extend';
 import UserPage from 'flarum/forum/components/UserPage';
 import LinkButton from 'flarum/common/components/LinkButton';
@@ -21,9 +21,9 @@ app.initializers.add('xypp/user-decoration', () => {
   User.prototype.canCreateDecoration = Model.attribute('canCreateDecoration');
   //@ts-ignore
   User.prototype.canDeleteDecoration = Model.attribute('canDeleteDecoration');
-  (new StyleFetcher(app)).done(m.redraw.sync);
-  initAvatarHijack();
-
+  (new StyleFetcher(app));
+  initDecorationHijack();
+  initDecorationExtend();
   app.routes['user.user_own_decoration'] = { path: '/u/:username/user_own_decoration', component: DecorationPage };
   extend(UserPage.prototype, 'navItems', function (items) {
     if (app.session.user) {

@@ -8,6 +8,11 @@ import UserDecorations from '../../common/models/UserDecorations';
 import CreateDecorationModal from '../../forum/components/CreateDecorationModal';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import setRouteWithForcedRefresh from 'flarum/common/utils/setRouteWithForcedRefresh';
+import username from 'flarum/common/helpers/username';
+import UserCard from 'flarum/forum/components/UserCard';
+import { avatarColor } from '../../common/utils/DecorationHijack';
+import { generatePost } from '../utils/fakePost';
+import { applyDecorationOn } from '../../common/utils/DecorationApplier';
 export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs> extends Component {
   type: string = '';
   id: number = 0;
@@ -31,7 +36,6 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
     this.id = (this.attrs as any)['decoration_id'];
     this.type = (this.attrs as any)['type'];
     this.uodId = (this.attrs as any)['user_own_decoration_id'];
-    m.redraw();
   }
   async change() {
     this.changing = true;
@@ -53,6 +57,8 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
       id: parseInt(app.session.user!.id() || ''),
       username: app.session.user!.username(),
       decorationId: this.id,
+      //@ts-ignore
+      color: app.session.user!.hijackColor().replace(/\#/g, "@")
     };
     this.decoration = app.store.getById('user-decorations', decorationObj.decorationId + '') as UserDecorations;
     if (!this.decoration) {
@@ -64,28 +70,74 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
       content = <LoadingIndicator></LoadingIndicator>;
     } else if (this.type == 'avatar') {
       this.isCurrent = this.decoration && app.session.user?.data.attributes?.avatar_decoration == this.decoration.id();
+      if (!app.forum.attribute("username_hijack")) {
+        content = [
+          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.avatar')}</h3>,
+          <div>{app.translator.trans('xypp-user-decoration.forum.decoration-box.closed')}</div>
+        ]
+      } else {
+        content = [
+          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.avatar')}</h3>,
+          <div class="avatar-box" data-uiid={this.id}>
+            {
+              <img
+                title="-"
+                class="Avatar"
+                src={
+                  //@ts-ignore
+                  (app.session.user?.realAvatarUrl() || '') + '#' + JSON.stringify(decorationObj)
+                }
+              />
+            }
+          </div>,
+
+        ];
+      }
+    } else if (this.type == 'name') {
+      this.isCurrent = this.decoration && app.session.user?.data.attributes?.name_decoration == this.decoration?.id();
+      if (!app.forum.attribute("username_hijack")) {
+        content = [
+          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.name')}</h3>,
+          <div>{app.translator.trans('xypp-user-decoration.forum.decoration-box.closed')}</div>
+        ]
+      } else {
+        const decorated = (<span class="username-container username"><span class="username-text">{
+          //@ts-ignore
+          app.session.user?.realUserName()
+        }</span></span>);
+        if (this.decoration)
+          applyDecorationOn(decorated, this.decoration);
+        content = [
+          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.name')}</h3>,
+          <div>{decorated}</div>
+        ];
+      }
+    } else if (this.type == "card") {
+      this.isCurrent = this.decoration && app.session.user?.data.attributes?.card_decoration == this.decoration?.id();
       content = [
-        <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.avatar')}</h3>,
-        <div class="avatar-box" data-uiid={this.id}>
-          {
-            <img
-              title="-"
-              class="Avatar"
-              src={
-                //@ts-ignore
-                (app.session.user?.realAvatarUrl() || '') + '#' + JSON.stringify(decorationObj)
-              }
-            />
-          }
-        </div>,
-        <div class="decoration-box-content">
-          {this.decoration ? this.decoration!.desc() : app.translator.trans('xypp-user-decoration.forum.decoration-box.loading')}
-        </div>,
-      ];
+        <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.card')}</h3>,
+        <div class="decoration-box-card-container">
+          <UserCard user={app.session.user} controlsButtonClassName="UserCard-controls App-primaryControl" className="UserCard--popover in" decoration_id={this.decoration?.id()}></UserCard>
+        </div>
+      ]
+    } else if (this.type == "post") {
+      this.isCurrent = this.decoration && app.session.user?.data.attributes?.post_decoration == this.decoration?.id();
+      const afterDecoration = generatePost(app.session.user!);
+      if (this.decoration)
+        applyDecorationOn(afterDecoration, this.decoration);
+      content = [
+        <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.post')}</h3>,
+        <div class="decoration-box-card-container">{afterDecoration}</div>
+      ]
     }
     return (
       <div className="DecorationBox">
-        {content}
+        <div className='prev-warpper'>
+          {content}
+        </div>
+        <div class="decoration-box-content">
+          {this.decoration ? this.decoration!.desc() : app.translator.trans('xypp-user-decoration.forum.decoration-box.loading')}
+        </div>
         {(this.attrs as any).noBtn ? (
           ''
         ) : (
@@ -99,7 +151,7 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
           ''
         ) : (
           <div class="delete-decoration" onclick={this.delete.bind(this)}>
-            <i class="fas fa-trash" aria-label={app.translator.trans('xypp-user-decoration.forum.decoration.delete_button')}></i>
+            <i class="fas fa-times" aria-label={app.translator.trans('xypp-user-decoration.forum.decoration.delete_button')}></i>
           </div>
         )}
         {(this.attrs as any).noEdit ? (
@@ -121,9 +173,7 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
       });
       this.changing = false;
 
-      setRouteWithForcedRefresh('user.user_own_decoration', {
-        username: app.store.getById('users', (this.attrs as any).user_id)?.data?.attributes?.slug,
-      } as any);
+      setRouteWithForcedRefresh(app.history.getCurrent().url);
     }
   }
 

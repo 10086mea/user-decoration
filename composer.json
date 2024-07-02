@@ -18,17 +18,17 @@
     ],
     "autoload": {
         "psr-4": {
-            "Xypp\\UserAvatar\\": "src/"
+            "Xypp\\UserDecoration\\": "src/"
         }
     },
     "extra": {
         "flarum-extension": {
             "title": "User Decoration",
-            "category": "",
+            "category": "feature",
             "icon": {
-                "name": "",
-                "color": "",
-                "backgroundColor": ""
+                "name": "fa fas-brush",
+                "color": "#ffebee",
+                "backgroundColor": "#ebfffc"
             },
             "optional-dependencies": [
                 "xypp/store"
@@ -57,10 +57,7 @@
     "prefer-stable": true,
     "autoload-dev": {
         "psr-4": {
-            "Xypp\\UserAvatar\\Tests\\": "tests/"
+            "Xypp\\UserDecoration\\Tests\\": "tests/"
         }
-    },
-    "require-dev": {
-        "flarum/testing": "^1.0.0"
     }
 }

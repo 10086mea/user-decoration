@@ -1,6 +1,6 @@
 <?php
 
-namespace Xypp\UserAvatar;
+namespace Xypp\UserDecoration;
 
 use Flarum\Database\AbstractModel;
 use Flarum\Database\ScopeVisibilityTrait;

@@ -1,12 +1,12 @@
 <?php
 
-namespace Xypp\UserAvatar\Api\Controller;
+namespace Xypp\UserDecoration\Api\Controller;
 
 use Flarum\Api\Controller\AbstractListController;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Tobscure\JsonApi\Document;
-use Xypp\UserAvatar\Api\Serializer\UserDecorationSerializer;
-use Xypp\UserAvatar\UserDecoration;
+use Xypp\UserDecoration\Api\Serializer\UserDecorationSerializer;
+use Xypp\UserDecoration\UserDecoration;
 
 class ListUserDecorations extends AbstractListController
 {

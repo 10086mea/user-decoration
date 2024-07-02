@@ -6,10 +6,11 @@ xypp-user-decoration:
     decoration-box:
       error: "Unknown Type"
       avatar: "Avatar Style"
-      username: "Username Style"
+      name: "Username Style"
       post: "Post Style"
-      usercard: "User Card Style"
+      card: "User Card Style"
       loading: "Loading"
+      closed: "Closed"
     decoration:
       delete_button: "Delete"
       remove_button: "Remove"
@@ -25,6 +26,7 @@ xypp-user-decoration:
     create: "Create"
     create-success: "Successfully created decoration"
     create-modal:
+      edit-title: "Edit Decoration#{0}"
       title: "Create Decoration"
       type:
         title: "Type"
@@ -37,6 +39,9 @@ xypp-user-decoration:
       style: "Style Sheet"
       tip: "Use .base selector to select the target, .element-xxx to add new element"
       button: "Create"
+      delete-button: "Delete"
+    delete_confirm: "Are you sure to delete this decoration?"
+    delete-success: "Delete Success"
     user_controls:
       offer: "Offer decoration"
   admin:
@@ -44,6 +49,18 @@ xypp-user-decoration:
       view_decoration: "View other's decoration"
       delete_decoration: "Delete other's decoration"
       offer_decoration: "Offer decoration"
+      create_decoration: "Create/Edit decoration"
+      view-all: "View all decoration"
+    settings:
+      username_hijack:
+        title: "Username Hijack"
+        desc: "This plugin will try to hijack the username method of the user model and insert some identity information to recognize the user. If some other plugin has crashed due to the hijack, you can disable this function to solve the problem."
+      avatar_hijack:
+        title: "Avatar Hijack"
+        desc: "This plugin will try to hijack the avatar method of the user model and insert some identity information to recognize the user. If some other plugin has crashed due to the hijack, you can disable this function to solve the problem."
+      view-all:
+        title: "View All"
+        desc: "Is view-all promission enabled?"
 xypp-store:
   forum:
     unavailable:

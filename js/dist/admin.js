@@ -1,315 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/color-thief-browser/dist/color-thief.min.js":
-/*!******************************************************************!*\
-  !*** ./node_modules/color-thief-browser/dist/color-thief.min.js ***!
-  \******************************************************************/
-/***/ ((module) => {
-
-/*!
- * Color Thief v2.0
- * by Lokesh Dhakar - http://www.lokeshdhakar.com
- *
- * Thanks
- * ------
- * Nick Rabinowitz - For creating quantize.js.
- * John Schulz - For clean up and optimization. @JFSIII
- * Nathan Spady - For adding drag and drop support to the demo page.
- *
- * License
- * -------
- * Copyright 2011, 2015 Lokesh Dhakar
- * Released under the MIT license
- * https://raw.githubusercontent.com/lokesh/color-thief/master/LICENSE
- *
- */
-var CanvasImage = function CanvasImage(a) {
-  this.canvas = document.createElement("canvas"), this.context = this.canvas.getContext("2d"), document.body.appendChild(this.canvas), this.width = this.canvas.width = a.width, this.height = this.canvas.height = a.height, this.context.drawImage(a, 0, 0, this.width, this.height);
-};
-CanvasImage.prototype.clear = function () {
-  this.context.clearRect(0, 0, this.width, this.height);
-}, CanvasImage.prototype.update = function (a) {
-  this.context.putImageData(a, 0, 0);
-}, CanvasImage.prototype.getPixelCount = function () {
-  return this.width * this.height;
-}, CanvasImage.prototype.getImageData = function () {
-  return this.context.getImageData(0, 0, this.width, this.height);
-}, CanvasImage.prototype.removeCanvas = function () {
-  this.canvas.parentNode.removeChild(this.canvas);
-};
-var ColorThief = function ColorThief() {}; /*!
-                                           * quantize.js Copyright 2008 Nick Rabinowitz.
-                                           * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
-                                           */
-/*!
- * Block below copied from Protovis: http://mbostock.github.com/protovis/
- * Copyright 2010 Stanford Visualization Group
- * Licensed under the BSD License: http://www.opensource.org/licenses/bsd-license.php
- */
-if (ColorThief.prototype.getColor = function (a, b) {
-  var c = this.getPalette(a, 5, b),
-    d = c[0];
-  return d;
-}, ColorThief.prototype.getPalette = function (a, b, c) {
-  "undefined" == typeof b && (b = 10), ("undefined" == typeof c || 1 > c) && (c = 10);
-  for (var d, e, f, g, h, i = new CanvasImage(a), j = i.getImageData(), k = j.data, l = i.getPixelCount(), m = [], n = 0; l > n; n += c) d = 4 * n, e = k[d + 0], f = k[d + 1], g = k[d + 2], h = k[d + 3], h >= 125 && (e > 250 && f > 250 && g > 250 || m.push([e, f, g]));
-  var o = MMCQ.quantize(m, b),
-    p = o ? o.palette() : null;
-  return i.removeCanvas(), p;
-}, !pv) var pv = {
-  map: function map(a, b) {
-    var c = {};
-    return b ? a.map(function (a, d) {
-      return c.index = d, b.call(c, a);
-    }) : a.slice();
-  },
-  naturalOrder: function naturalOrder(a, b) {
-    return b > a ? -1 : a > b ? 1 : 0;
-  },
-  sum: function sum(a, b) {
-    var c = {};
-    return a.reduce(b ? function (a, d, e) {
-      return c.index = e, a + b.call(c, d);
-    } : function (a, b) {
-      return a + b;
-    }, 0);
-  },
-  max: function max(a, b) {
-    return Math.max.apply(null, b ? pv.map(a, b) : a);
-  }
-};
-var MMCQ = function () {
-  function a(a, b, c) {
-    return (a << 2 * i) + (b << i) + c;
-  }
-  function b(a) {
-    function b() {
-      c.sort(a), d = !0;
-    }
-    var c = [],
-      d = !1;
-    return {
-      push: function push(a) {
-        c.push(a), d = !1;
-      },
-      peek: function peek(a) {
-        return d || b(), void 0 === a && (a = c.length - 1), c[a];
-      },
-      pop: function pop() {
-        return d || b(), c.pop();
-      },
-      size: function size() {
-        return c.length;
-      },
-      map: function map(a) {
-        return c.map(a);
-      },
-      debug: function debug() {
-        return d || b(), c;
-      }
-    };
-  }
-  function c(a, b, c, d, e, f, g) {
-    var h = this;
-    h.r1 = a, h.r2 = b, h.g1 = c, h.g2 = d, h.b1 = e, h.b2 = f, h.histo = g;
-  }
-  function d() {
-    this.vboxes = new b(function (a, b) {
-      return pv.naturalOrder(a.vbox.count() * a.vbox.volume(), b.vbox.count() * b.vbox.volume());
-    });
-  }
-  function e(b) {
-    var c,
-      d,
-      e,
-      f,
-      g = 1 << 3 * i,
-      h = new Array(g);
-    return b.forEach(function (b) {
-      d = b[0] >> j, e = b[1] >> j, f = b[2] >> j, c = a(d, e, f), h[c] = (h[c] || 0) + 1;
-    }), h;
-  }
-  function f(a, b) {
-    var d,
-      e,
-      f,
-      g = 1e6,
-      h = 0,
-      i = 1e6,
-      k = 0,
-      l = 1e6,
-      m = 0;
-    return a.forEach(function (a) {
-      d = a[0] >> j, e = a[1] >> j, f = a[2] >> j, g > d ? g = d : d > h && (h = d), i > e ? i = e : e > k && (k = e), l > f ? l = f : f > m && (m = f);
-    }), new c(g, h, i, k, l, m, b);
-  }
-  function g(b, c) {
-    function d(a) {
-      var b,
-        d,
-        e,
-        f,
-        g,
-        h = a + "1",
-        j = a + "2",
-        k = 0;
-      for (i = c[h]; i <= c[j]; i++) if (o[i] > n / 2) {
-        for (e = c.copy(), f = c.copy(), b = i - c[h], d = c[j] - i, g = d >= b ? Math.min(c[j] - 1, ~~(i + d / 2)) : Math.max(c[h], ~~(i - 1 - b / 2)); !o[g];) g++;
-        for (k = p[g]; !k && o[g - 1];) k = p[--g];
-        return e[j] = g, f[h] = e[j] + 1, [e, f];
-      }
-    }
-    if (c.count()) {
-      var e = c.r2 - c.r1 + 1,
-        f = c.g2 - c.g1 + 1,
-        g = c.b2 - c.b1 + 1,
-        h = pv.max([e, f, g]);
-      if (1 == c.count()) return [c.copy()];
-      var i,
-        j,
-        k,
-        l,
-        m,
-        n = 0,
-        o = [],
-        p = [];
-      if (h == e) for (i = c.r1; i <= c.r2; i++) {
-        for (l = 0, j = c.g1; j <= c.g2; j++) for (k = c.b1; k <= c.b2; k++) m = a(i, j, k), l += b[m] || 0;
-        n += l, o[i] = n;
-      } else if (h == f) for (i = c.g1; i <= c.g2; i++) {
-        for (l = 0, j = c.r1; j <= c.r2; j++) for (k = c.b1; k <= c.b2; k++) m = a(j, i, k), l += b[m] || 0;
-        n += l, o[i] = n;
-      } else for (i = c.b1; i <= c.b2; i++) {
-        for (l = 0, j = c.r1; j <= c.r2; j++) for (k = c.g1; k <= c.g2; k++) m = a(j, k, i), l += b[m] || 0;
-        n += l, o[i] = n;
-      }
-      return o.forEach(function (a, b) {
-        p[b] = n - a;
-      }), d(h == e ? "r" : h == f ? "g" : "b");
-    }
-  }
-  function h(a, c) {
-    function h(a, b) {
-      for (var c, d = 1, e = 0; k > e;) if (c = a.pop(), c.count()) {
-        var f = g(i, c),
-          h = f[0],
-          j = f[1];
-        if (!h) return;
-        if (a.push(h), j && (a.push(j), d++), d >= b) return;
-        if (e++ > k) return;
-      } else a.push(c), e++;
-    }
-    if (!a.length || 2 > c || c > 256) return !1;
-    var i = e(a),
-      j = 0;
-    i.forEach(function () {
-      j++;
-    });
-    var m = f(a, i),
-      n = new b(function (a, b) {
-        return pv.naturalOrder(a.count(), b.count());
-      });
-    n.push(m), h(n, l * c);
-    for (var o = new b(function (a, b) {
-      return pv.naturalOrder(a.count() * a.volume(), b.count() * b.volume());
-    }); n.size();) o.push(n.pop());
-    h(o, c - o.size());
-    for (var p = new d(); o.size();) p.push(o.pop());
-    return p;
-  }
-  var i = 5,
-    j = 8 - i,
-    k = 1e3,
-    l = .75;
-  return c.prototype = {
-    volume: function volume(a) {
-      var b = this;
-      return (!b._volume || a) && (b._volume = (b.r2 - b.r1 + 1) * (b.g2 - b.g1 + 1) * (b.b2 - b.b1 + 1)), b._volume;
-    },
-    count: function count(b) {
-      var c = this,
-        d = c.histo;
-      if (!c._count_set || b) {
-        var e,
-          f,
-          g,
-          h = 0;
-        for (e = c.r1; e <= c.r2; e++) for (f = c.g1; f <= c.g2; f++) for (g = c.b1; g <= c.b2; g++) index = a(e, f, g), h += d[index] || 0;
-        c._count = h, c._count_set = !0;
-      }
-      return c._count;
-    },
-    copy: function copy() {
-      var a = this;
-      return new c(a.r1, a.r2, a.g1, a.g2, a.b1, a.b2, a.histo);
-    },
-    avg: function avg(b) {
-      var c = this,
-        d = c.histo;
-      if (!c._avg || b) {
-        var e,
-          f,
-          g,
-          h,
-          j,
-          k = 0,
-          l = 1 << 8 - i,
-          m = 0,
-          n = 0,
-          o = 0;
-        for (f = c.r1; f <= c.r2; f++) for (g = c.g1; g <= c.g2; g++) for (h = c.b1; h <= c.b2; h++) j = a(f, g, h), e = d[j] || 0, k += e, m += e * (f + .5) * l, n += e * (g + .5) * l, o += e * (h + .5) * l;
-        k ? c._avg = [~~(m / k), ~~(n / k), ~~(o / k)] : c._avg = [~~(l * (c.r1 + c.r2 + 1) / 2), ~~(l * (c.g1 + c.g2 + 1) / 2), ~~(l * (c.b1 + c.b2 + 1) / 2)];
-      }
-      return c._avg;
-    },
-    contains: function contains(a) {
-      var b = this,
-        c = a[0] >> j;
-      return gval = a[1] >> j, bval = a[2] >> j, c >= b.r1 && c <= b.r2 && gval >= b.g1 && gval <= b.g2 && bval >= b.b1 && bval <= b.b2;
-    }
-  }, d.prototype = {
-    push: function push(a) {
-      this.vboxes.push({
-        vbox: a,
-        color: a.avg()
-      });
-    },
-    palette: function palette() {
-      return this.vboxes.map(function (a) {
-        return a.color;
-      });
-    },
-    size: function size() {
-      return this.vboxes.size();
-    },
-    map: function map(a) {
-      for (var b = this.vboxes, c = 0; c < b.size(); c++) if (b.peek(c).vbox.contains(a)) return b.peek(c).color;
-      return this.nearest(a);
-    },
-    nearest: function nearest(a) {
-      for (var b, c, d, e = this.vboxes, f = 0; f < e.size(); f++) c = Math.sqrt(Math.pow(a[0] - e.peek(f).color[0], 2) + Math.pow(a[1] - e.peek(f).color[1], 2) + Math.pow(a[2] - e.peek(f).color[2], 2)), (b > c || void 0 === b) && (b = c, d = e.peek(f).color);
-      return d;
-    },
-    forcebw: function forcebw() {
-      var a = this.vboxes;
-      a.sort(function (a, b) {
-        return pv.naturalOrder(pv.sum(a.color), pv.sum(b.color));
-      });
-      var b = a[0].color;
-      b[0] < 5 && b[1] < 5 && b[2] < 5 && (a[0].color = [0, 0, 0]);
-      var c = a.length - 1,
-        d = a[c].color;
-      d[0] > 251 && d[1] > 251 && d[2] > 251 && (a[c].color = [255, 255, 255]);
-    }
-  }, {
-    quantize: h
-  };
-}();
-module.exports = ColorThief;
-
-/***/ }),
-
 /***/ "./src/admin/index.ts":
 /*!****************************!*\
   !*** ./src/admin/index.ts ***!
@@ -321,29 +12,48 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_admin_app__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! flarum/admin/app */ "flarum/admin/app");
 /* harmony import */ var flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(flarum_admin_app__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
-/* harmony import */ var _common_utils_avatarHijack__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../common/utils/avatarHijack */ "./src/common/utils/avatarHijack.ts");
-
 
 
 flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().initializers.add('xypp/user-decoration', function () {
   new _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_1__.StyleFetcher((flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default()));
-  (0,_common_utils_avatarHijack__WEBPACK_IMPORTED_MODULE_2__.initAvatarHijack)();
-  flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().extensionData["for"]('xypp-user-decoration').registerPermission({
-    icon: 'fas fa-money-bill',
+  flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().extensionData["for"]('xypp-user-decoration').registerSetting({
+    setting: 'xypp-user-decoration.username_hijack',
+    type: 'boolean',
+    label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.settings.username_hijack.title'),
+    help: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.settings.username_hijack.desc'),
+    "default": true
+  }).registerSetting({
+    setting: 'xypp-user-decoration.avatar_hijack',
+    type: 'boolean',
+    label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.settings.avatar_hijack.title'),
+    help: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.settings.avatar_hijack.desc'),
+    "default": true
+  }).registerSetting({
+    setting: 'xypp-user-decoration.view-all',
+    type: 'boolean',
+    label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.settings.view-all.title'),
+    help: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.settings.view-all.desc'),
+    "default": true
+  }).registerPermission({
+    icon: 'fas fa-brush',
     label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.permissions.offer_decoration'),
     permission: 'user.offer_decoration'
   }, 'moderate', 30).registerPermission({
-    icon: 'fas fa-money-bill',
+    icon: 'fas fa-eye',
     label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.permissions.view_decoration'),
     permission: 'user.view_decoration'
   }, 'moderate', 30).registerPermission({
-    icon: 'fas fa-money-bill',
-    label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.permissions.create_decoration'),
-    permission: 'user.view_decoration'
-  }, 'moderate', 30).registerPermission({
-    icon: 'fas fa-money-bill',
+    icon: 'fas fa-trash',
     label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.permissions.delete_decoration'),
     permission: 'user.delete_decoration'
+  }, 'moderate', 30).registerPermission({
+    icon: 'fas fa-plus-circle',
+    label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.permissions.create_decoration'),
+    permission: 'user.create_decoration'
+  }, 'moderate', 30).registerPermission({
+    icon: 'fas fa-eye',
+    label: flarum_admin_app__WEBPACK_IMPORTED_MODULE_0___default().translator.trans('xypp-user-decoration.admin.permissions.view-all'),
+    permission: 'user.view_all'
   }, 'moderate', 30);
 });
 
@@ -434,12 +144,15 @@ var StyleFetcher = /*#__PURE__*/function () {
       _this2.fetchId[id] = _this2.fetchId[id] || [];
       _this2.fetchId[id].push(resolve);
       if (_this2.fetchIntervalId == -1) {
-        _this2.fetchIntervalId = setTimeout(_this2.sendFetch.bind(_this2), 1000);
+        _this2.fetchIntervalId = setTimeout(_this2.sendFetch.bind(_this2), 400);
       }
     });
   };
   _proto.fetchStyleSync = function fetchStyleSync(id) {
     return this.app.store.getById('user-decorations', id + "") || undefined;
+  };
+  _proto.getApp = function getApp() {
+    return this.app;
   };
   return StyleFetcher;
 }();
@@ -561,291 +274,6 @@ var UserOwnDecoration = /*#__PURE__*/function (_Model) {
 
 /***/ }),
 
-/***/ "./src/common/utils/avatarHijack.ts":
-/*!******************************************!*\
-  !*** ./src/common/utils/avatarHijack.ts ***!
-  \******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   initAvatarHijack: () => (/* binding */ initAvatarHijack)
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/asyncToGenerator */ "./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
-/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
-/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! flarum/common/Component */ "flarum/common/Component");
-/* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! flarum/common/extend */ "flarum/common/extend");
-/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! flarum/common/models/User */ "flarum/common/models/User");
-/* harmony import */ var flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _utils_decorationApplier__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/decorationApplier */ "./src/common/utils/decorationApplier.ts");
-/* harmony import */ var flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! flarum/common/utils/computed */ "flarum/common/utils/computed");
-/* harmony import */ var flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! flarum/common/utils/stringToColor */ "flarum/common/utils/stringToColor");
-/* harmony import */ var flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var color_thief_browser__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! color-thief-browser */ "./node_modules/color-thief-browser/dist/color-thief.min.js");
-/* harmony import */ var color_thief_browser__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(color_thief_browser__WEBPACK_IMPORTED_MODULE_8__);
-
-
-
-
-
-
-
-
-
-var globalUserAvatarHijackIid = 0;
-/**
- * @description 劫持用户头像生成.将用户信息编码到头像信息中.
- */
-function initAvatarHijack() {
-  var originalUserAvatar = (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).avatarUrl;
-  function calculateAvatarColor(user, avatarUrl) {
-    var image = new Image();
-    image.addEventListener('load', function () {
-      try {
-        var colorThief = new (color_thief_browser__WEBPACK_IMPORTED_MODULE_8___default())();
-        //@ts-ignore
-        user.avatarColor = colorThief.getColor(this);
-      } catch (e) {
-        // Completely white avatars throw errors due to a glitch in color thief
-        // See https://github.com/lokesh/color-thief/issues/40
-        if (e instanceof TypeError) {
-          //@ts-ignore
-          user.avatarColor = [255, 255, 255];
-        } else {
-          throw e;
-        }
-      }
-      user.freshness = new Date();
-      m.redraw();
-    });
-    image.crossOrigin = 'anonymous';
-    image.src = avatarUrl != null ? avatarUrl : '';
-  }
-  //@ts-ignore
-  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).realAvatarUrl = originalUserAvatar;
-  //@ts-ignore
-  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).hijackColor = function () {
-    var _this = this;
-    return flarum_common_utils_computed__WEBPACK_IMPORTED_MODULE_6___default()('displayName', 'realAvatarUrl', 'avatarColor', function (displayName, avatarUrl, avatarColor) {
-      if (avatarColor) {
-        return "rgb(" + avatarColor.join(', ') + ")";
-      } else if (avatarUrl) {
-        calculateAvatarColor(_this, avatarUrl);
-        return '';
-      }
-      return '#' + flarum_common_utils_stringToColor__WEBPACK_IMPORTED_MODULE_7___default()(displayName);
-    }).call(this);
-  };
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype), "avatarUrl", function () {
-    var _this$data$attributes;
-    //@ts-ignore
-    var color = this.hijackColor();
-    if (color && !!color['charAt']) {
-      color = color.replace(/#/g, '@');
-    }
-    var encodedUserInfo = JSON.stringify({
-      decorationId: (_this$data$attributes = this.data.attributes) == null ? void 0 : _this$data$attributes.avatar_decoration,
-      username: this.username(),
-      displayName: this.displayName(),
-      id: this.id(),
-      color: color
-    });
-    //@ts-ignore
-    return (originalUserAvatar.call(this) || "").split("#").pop() + "#" + encodedUserInfo;
-  });
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['oninit'], function () {
-    this.userAvatarHijackIid = globalUserAvatarHijackIid++;
-    this.originalView = this.view.bind(this);
-    this.view = hijackViewHandler.bind(this);
-    this.originalOnBefUp = this.onbeforeupdate.bind(this);
-    this.onbeforeupdate = hijackOnBeforeUpdate.bind(this);
-  });
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['onupdate', "oncreate"], /*#__PURE__*/(0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().mark(function _callee() {
-    var ctr;
-    return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().wrap(function _callee$(_context) {
-      while (1) switch (_context.prev = _context.next) {
-        case 0:
-          ctr = $(".Avatar-container[data-userAvatarHijackIid=\"" + this.userAvatarHijackIid + "\"]");
-          if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
-            ctr.css("position", "relative");
-          }
-        case 2:
-        case "end":
-          return _context.stop();
-      }
-    }, _callee, this);
-  })));
-  console.log("Avatar Hijack loaded");
-}
-function hijackOnBeforeUpdate() {
-  //@ts-ignore
-  var injected = this.$(".user-avatar-hijack-wait-reload").length !== 0 || $(this.element).hasClass("user-avatar-hijack-wait-reload");
-  //@ts-ignore
-  $(this.element).removeClass("user-avatar-hijack-wait-reload");
-  //@ts-ignore
-  for (var _len = arguments.length, a = new Array(_len), _key = 0; _key < _len; _key++) {
-    a[_key] = arguments[_key];
-  }
-  if (this.originalOnBefUp.apply(this, a) === false) {
-    if (injected) {
-      return;
-    }
-    return false;
-  }
-  return;
-}
-function hijackViewHandler(vnode) {
-  //@ts-ignore
-  var vnodeTree = this.originalView(vnode);
-  if (!vnodeTree) return vnodeTree;
-  if (vnodeIsAvatar(vnodeTree)) {
-    //@ts-ignore
-    return createWrappedAvatar(vnodeTree, this);
-  } else {
-    //@ts-ignore
-    hijackView(null, vnodeTree, vnode, this);
-  }
-  return vnodeTree;
-}
-function hijackView(parent, root, stopAt, ctx) {
-  if (root === stopAt) return;
-  if (parent && vnodeIsAvatar(root)) {
-    parent.children = parent.children.map(function (child) {
-      if (child === root) {
-        return createWrappedAvatar(child, ctx);
-      } else return child;
-    });
-  } else if (typeof root.children === 'object' && root.children['forEach']) {
-    root.children.forEach(function (child) {
-      child && hijackView(root, child, stopAt, ctx);
-    });
-  }
-}
-function vnodeIsAvatar(vnode) {
-  var _vnode$attrs$classNam;
-  return vnode && vnode.tag == "img" && ((_vnode$attrs$classNam = vnode.attrs.className) == null ? void 0 : _vnode$attrs$classNam.includes("Avatar")) && /( |^)Avatar( |$)/.test(vnode.attrs.className) && vnode.attrs.src;
-}
-function createWrappedAvatar(vnode, ctx) {
-  var _toWarp$attrs$classNa;
-  var attrData = vnode.attrs.src.split("#");
-  if (attrData.length != 2) return vnode;
-  var toWarp = vnode;
-  var userInfo = JSON.parse(attrData.pop());
-  var avatarUrl = attrData.shift();
-  if (!avatarUrl) {
-    toWarp.tag = "span";
-    toWarp.children = [{
-      tag: "#",
-      children: userInfo.username.charAt(0),
-      state: undefined,
-      attrs: {}
-    }];
-    var color = userInfo.color;
-    if (color && !!color['charAt']) {
-      color = color.replace(/@/g, "#");
-    }
-    if (color) {
-      var _toWarp$attrs$style;
-      toWarp.attrs.style = ((_toWarp$attrs$style = toWarp.attrs.style) != null ? _toWarp$attrs$style : "") + (";--avatar-bg: " + color + ";");
-    }
-  }
-  toWarp.attrs.src = avatarUrl;
-  var ctr = {
-    tag: "span",
-    attrs: {
-      "data-ctr": "avatar"
-    },
-    state: undefined,
-    children: [toWarp]
-  };
-  ctr.attrs.style = toWarp.attrs.style;
-  ctr.attrs.className = ((_toWarp$attrs$classNa = toWarp.attrs.className) != null ? _toWarp$attrs$classNa : "") + " Avatar-container";
-  ctr.attrs['data-userAvatarHijackIid'] = ctx.userAvatarHijackIid;
-  //@ts-ignore
-  if (ctx.appendRelative) {
-    var _ctr$attrs$style;
-    ctr.attrs.style = ((_ctr$attrs$style = ctr.attrs.style) != null ? _ctr$attrs$style : "") + ";position:relative;";
-  }
-  toWarp.attrs.className = "";
-  userInfo.container = ctr;
-  (0,_utils_decorationApplier__WEBPACK_IMPORTED_MODULE_5__.applyDecoration)(userInfo, ctx);
-  return ctr;
-}
-
-/***/ }),
-
-/***/ "./src/common/utils/decorationApplier.ts":
-/*!***********************************************!*\
-  !*** ./src/common/utils/decorationApplier.ts ***!
-  \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   applyDecoration: () => (/* binding */ applyDecoration),
-/* harmony export */   applyDecorationOn: () => (/* binding */ applyDecorationOn)
-/* harmony export */ });
-/* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
-
-
-/**
- * 在用户界面对象上应用样式
- * @param elementInfo 用户界面元素对象.由各种事件中直接获取包装得到.
- */
-function applyDecoration(elementInfo, ctx) {
-  if (!elementInfo.decoration) {
-    if (elementInfo.decorationId) {
-      var _StyleFetcher$getInst;
-      elementInfo.decoration = (_StyleFetcher$getInst = _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__.StyleFetcher.getInstance()) == null ? void 0 : _StyleFetcher$getInst.fetchStyleSync(elementInfo.decorationId);
-      if (!elementInfo.decoration) {
-        var _StyleFetcher$getInst2;
-        (_StyleFetcher$getInst2 = _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_0__.StyleFetcher.getInstance()) == null || _StyleFetcher$getInst2.fetchStyle(elementInfo.decorationId).then(function () {
-          $(ctx.element).addClass("user-avatar-hijack-wait-reload");
-          m.redraw();
-        });
-      }
-    }
-    if (!elementInfo.decoration) return;
-  }
-  if (!elementInfo.container) return;
-  applyDecorationOn(elementInfo.container, elementInfo.decoration);
-}
-/**
- * 在容器元素上应用样式
- * @param element 容器元素
- * @param decoration 用户装饰样式对象
- */
-function applyDecorationOn(element, decoration) {
-  var _exec;
-  var ctr = $("head #user-decoration-" + decoration.id());
-  if (!ctr.length) {
-    ctr = $("<style>").attr("id", "user-decoration-" + decoration.id());
-    var style = decoration.style() || "";
-    style = style.replace(/\.base/g, ".user-decoration-" + decoration.id());
-    ctr.html(style);
-    $("head").append(ctr);
-  }
-  (_exec = /\.element-[a-zA-Z0-9-_]+{/.exec(ctr.html())) == null || _exec.forEach(function (value, i, ar) {
-    element.children.push({
-      tag: "span",
-      state: undefined,
-      attrs: {
-        className: value.substring(1, value.length - 1)
-      }
-    });
-  });
-  if (!new RegExp("( |^)user-decoration-" + decoration.id() + "( |$)").test(element.attrs.className)) element.attrs.className += " user-decoration-" + decoration.id();
-  if (!/( |^)has-user-decoration( |$)/.test(element.attrs.className)) element.attrs.className += " has-user-decoration";
-}
-
-/***/ }),
-
 /***/ "flarum/admin/app":
 /*!**************************************************!*\
   !*** external "flarum.core.compat['admin/app']" ***!
@@ -857,17 +285,6 @@ module.exports = flarum.core.compat['admin/app'];
 
 /***/ }),
 
-/***/ "flarum/common/Component":
-/*!*********************************************************!*\
-  !*** external "flarum.core.compat['common/Component']" ***!
-  \*********************************************************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = flarum.core.compat['common/Component'];
-
-/***/ }),
-
 /***/ "flarum/common/Model":
 /*!*****************************************************!*\
   !*** external "flarum.core.compat['common/Model']" ***!
@@ -876,17 +293,6 @@ module.exports = flarum.core.compat['common/Component'];
 
 "use strict";
 module.exports = flarum.core.compat['common/Model'];
-
-/***/ }),
-
-/***/ "flarum/common/extend":
-/*!******************************************************!*\
-  !*** external "flarum.core.compat['common/extend']" ***!
-  \******************************************************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = flarum.core.compat['common/extend'];
 
 /***/ }),
 
@@ -909,28 +315,6 @@ module.exports = flarum.core.compat['common/extenders'];
 
 "use strict";
 module.exports = flarum.core.compat['common/models/User'];
-
-/***/ }),
-
-/***/ "flarum/common/utils/computed":
-/*!**************************************************************!*\
-  !*** external "flarum.core.compat['common/utils/computed']" ***!
-  \**************************************************************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = flarum.core.compat['common/utils/computed'];
-
-/***/ }),
-
-/***/ "flarum/common/utils/stringToColor":
-/*!*******************************************************************!*\
-  !*** external "flarum.core.compat['common/utils/stringToColor']" ***!
-  \*******************************************************************/
-/***/ ((module) => {
-
-"use strict";
-module.exports = flarum.core.compat['common/utils/stringToColor'];
 
 /***/ }),
 

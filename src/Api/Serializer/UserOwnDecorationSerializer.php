@@ -1,9 +1,9 @@
 <?php
 
-namespace Xypp\UserAvatar\Api\Serializer;
+namespace Xypp\UserDecoration\Api\Serializer;
 
 use Flarum\Api\Serializer\AbstractSerializer;
-use Xypp\UserAvatar\UserOwnDecoration;
+use Xypp\UserDecoration\UserOwnDecoration;
 use InvalidArgumentException;
 
 class UserOwnDecorationSerializer extends AbstractSerializer
