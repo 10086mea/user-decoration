@@ -18,7 +18,7 @@ class DeleteUserOwnDecoration extends AbstractDeleteController
     {
         $actor = RequestUtil::getActor($request);
         $id = Arr::get($request->getQueryParams(), 'id');
-        $model = UserOwnDecoration::findOrFail('id', $id);
+        $model = UserOwnDecoration::findOrFail($id);
         if ($model->user_id != $actor->id) {
             $actor->assertCan("delete_decoration");
         }

@@ -1,24 +1,69 @@
-.decoration-page{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: start;
-    text-align: center;
+.decoration-page {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: start;
+  text-align: center;
 }
-.DecorationBox{
-    flex-basis: 200px;
-    height:200px;
-    border-radius: 5px;
-    margin: 3px;
-    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.2);
-    position: relative;
+.decoration-page-container {
+  width: 100%;
 }
-.DecorationBox .Button {
+.decoration-page-title {
+  display: flex;
+  justify-content: space-between;
+}
+.DecorationBox {
+  text-align: center;
+  flex-basis: 200px;
+  height: 200px;
+  border-radius: 5px;
+  margin: 3px;
+  box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  .Button {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
+  }
+  .delete-decoration {
+    position: absolute;
+    right: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 9px;
+    border-radius: 20px;
+    opacity: 0.1;
+    transition: opacity 0.5s;
+  }
+  .delete-decoration:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
+
+  .edit-decoration {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 6px 9px;
+    border-radius: 20px;
+    opacity: 0.1;
+    transition: opacity 0.5s;
+  }
+  .edit-decoration:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
 }
-.UserCard-avatar .has-user-decoration.Avatar{
-    border:0;
-    padding: 4px;
+.UserCard-avatar .has-user-decoration.Avatar {
+  border: 0;
+  padding: 4px;
+}
+
+.store-item .DecorationBox {
+  border-radius: 0;
+  box-shadow: none;
+  height: 140px;
+  border-bottom: gray 1px solid;
+  border-top: gray 1px solid;
 }

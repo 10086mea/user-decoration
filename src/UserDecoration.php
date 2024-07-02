@@ -10,6 +10,5 @@ use Flarum\User\User;
 class UserDecoration extends AbstractModel
 {
     // See https://docs.flarum.org/extend/models.html#backend-models for more information.
-    
     protected $table = 'user_decoration';
 }

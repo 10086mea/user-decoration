@@ -2,6 +2,7 @@ xypp-user-decoration:
   # For more details on the format
   # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   forum:
+    decorations: "装扮"
     decoration-box:
       error: "未知类型"
       avatar: "头像样式"
@@ -12,6 +13,8 @@ xypp-user-decoration:
     decoration:
       remove_button: "移除"
       change_button: "修改"
+      delete_button: "删除"
+      delete_confirm: "确定删除装扮？"
     page:
       show-decorations: "装扮"
     modal:
@@ -19,6 +22,21 @@ xypp-user-decoration:
       tip: "请选择一个装扮"
       loading: "加载中"
       button: "授予"
+    create: "创建装扮"
+    create-success: "创建成功"
+    create-modal:
+      title: "创建装扮"
+      type:
+        title: "类型"
+        avatar: "头像"
+        username: "用户名"
+        post: "帖"
+        usercard: "用户卡片"
+      name: "名称"
+      desc: "描述"
+      style: "样式"
+      tip: "样式表请使用.base来选中目标元素，.element-xxx来添加新的元素"
+      button: "创建"
     user_controls:
       offer: "授予装扮"
   admin:
@@ -26,3 +44,8 @@ xypp-user-decoration:
       view_decoration: "查看他人装扮"
       delete_decoration: "删除他人装扮"
       offer_decoration: "授予他人装扮"
+xypp-store:
+  forum:
+    unavailable:
+      decoration:
+        dumplicate: "已拥有"

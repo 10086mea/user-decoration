@@ -7,16 +7,15 @@ import { applyDecoration, applyDecorationOn } from "../utils/decorationApplier";
 import computed from 'flarum/common/utils/computed';
 import stringToColor from 'flarum/common/utils/stringToColor';
 import ColorThief, { Color } from "color-thief-browser";
+import Mithril from "mithril";
+var globalUserAvatarHijackIid = 0;
 /**
  * @description 劫持用户头像生成.将用户信息编码到头像信息中.
  */
 export function initAvatarHijack() {
-    const originalUserAvater = User.prototype.avatarUrl;
-
-
+    const originalUserAvatar = User.prototype.avatarUrl;
     function calculateAvatarColor(user: User, avatarUrl: string) {
         const image = new Image();
-
         image.addEventListener('load', function (this: HTMLImageElement) {
             try {
                 const colorThief = new ColorThief();
@@ -39,7 +38,7 @@ export function initAvatarHijack() {
         image.src = avatarUrl ?? '';
     }
     //@ts-ignore
-    User.prototype.realAvatarUrl = originalUserAvater;
+    User.prototype.realAvatarUrl = originalUserAvatar;
     //@ts-ignore
     User.prototype.hijackColor = function () {
         return computed<string, User>('displayName', 'realAvatarUrl', 'avatarColor', (displayName, avatarUrl, avatarColor) => {
@@ -67,67 +66,109 @@ export function initAvatarHijack() {
             color
         });
         //@ts-ignore
-        return (originalUserAvater.call(this) || "").split("#").pop() + "#" + encodedUserInfo;
+        return (originalUserAvatar.call(this) || "").split("#").pop() + "#" + encodedUserInfo;
     });
 
+    extend(Component.prototype, ['oninit'], function () {
+        (this as any).userAvatarHijackIid = globalUserAvatarHijackIid++;
+        (this as any).originalView = this.view.bind(this);
+        this.view = hijackViewHandler.bind(this);
+        (this as any).originalOnBefUp = this.onbeforeupdate.bind(this);
+        this.onbeforeupdate = hijackOnBeforeUpdate.bind(this);
+    });
     extend(Component.prototype, ['onupdate', "oncreate"], async function () {
-        let elements = overrideAllAvatars($(this.element as HTMLElement));
-        const result = elements.forEach(async (element) => {
-            if (element.decorationId !== undefined) {
-                const result = await StyleFetcher.getInstance()?.fetchStyle(element.decorationId);
-                element.decoration = result || undefined;
-                applyDecoration(element);
-            }
-        })
+        const ctr = $(`.Avatar-container[data-userAvatarHijackIid="${(this as any).userAvatarHijackIid}"]`);
+        if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
+            ctr.css("position", "relative");
+        }
     });
-
     console.log("Avatar Hijack loaded");
 }
-export function overrideAvatar(_element: HTMLElement): userElementInfo | null {
-    let element = $(_element);
-    const attrData = ($(_element).attr("src") as string).split("#");
-    if (attrData.length != 2) return {
-        username: "",
-        color: "",
-        id: 0
-    };
-
+function hijackOnBeforeUpdate(...a: any) {
+    //@ts-ignore
+    const injected = this.$(".user-avatar-hijack-wait-reload").length !== 0 || $(this.element).hasClass("user-avatar-hijack-wait-reload");
+    //@ts-ignore
+    $(this.element).removeClass("user-avatar-hijack-wait-reload");
+    //@ts-ignore
+    if (this.originalOnBefUp.apply(this, a) === false) {
+        if (injected) {
+            return;
+        }
+        return false;
+    }
+    return;
+}
+function hijackViewHandler(vnode: any) {
+    //@ts-ignore
+    const vnodeTree = (this as any).originalView(vnode);
+    if (!vnodeTree) return vnodeTree;
+    if (vnodeIsAvatar(vnodeTree)) {
+        //@ts-ignore
+        return createWrappedAvatar(vnodeTree, this);
+    }
+    else {
+        //@ts-ignore
+        hijackView(null, vnodeTree, vnode, this);
+    }
+    return vnodeTree;
+}
+function hijackView(parent: Mithril.Vnode<any> | null, root: Mithril.Vnode<any>, stopAt: Mithril.Vnode<any>, ctx: any) {
+    if (root === stopAt) return;
+    if (parent && vnodeIsAvatar(root)) {
+        parent.children = (parent.children as Mithril.Vnode<any>[]).map((child) => {
+            if (child === root) {
+                return createWrappedAvatar(child, ctx);
+            } else return child;
+        });
+    } else if (typeof root.children === 'object' && root.children['forEach']) {
+        root.children.forEach((child: any) => {
+            child && hijackView(root, child, stopAt, ctx);
+        });
+    }
+}
+function vnodeIsAvatar(vnode: any): boolean {
+    return vnode && vnode.tag == "img" && vnode.attrs.className?.includes("Avatar") && /( |^)Avatar( |$)/.test(vnode.attrs.className) && (vnode.attrs as any).src;
+}
+function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any) {
+    const attrData = vnode.attrs.src.split("#");
+    if (attrData.length != 2) return vnode;
+    let toWarp: Mithril.Vnode<any, any> = vnode
     const userInfo: userElementInfo = JSON.parse(attrData.pop()!);
     const avatarUrl = attrData.shift();
     if (!avatarUrl) {
-        element = $("<span></span>");
-        for (let i = 0; i < _element.attributes.length; i++) {
-            element.attr(_element.attributes[i].name, _element.attributes[i].value);
-        }
-        element.text(userInfo.username.charAt(0));
+        toWarp.tag = "span";
+        toWarp.children = [{
+            tag: "#",
+            children: userInfo.username.charAt(0),
+            state: undefined,
+            attrs: {}
+        }];
         let color = userInfo.color;
         if (color && !!(color['charAt'])) {
             color = color.replace(/@/g, "#");
         }
-        color && element.css("--avatar-bg", color);
-        $(_element).before(element);
-        $(_element).remove();
+        if (color) {
+            toWarp.attrs.style = (toWarp.attrs.style ?? "") + `;--avatar-bg: ${color};`;
+        }
     }
-    const avaterImg = element;
-    avaterImg.attr("src", avatarUrl!);
-    const ctr = $("<span>");
-    avaterImg.after(ctr);
-    const id = (/u\/(.*)/.exec(ctr.parent().attr("href") ?? "") ?? [])[1]
-    ctr.append(avaterImg);
-    ctr.attr("class", avaterImg.attr("class") as any);
-    ctr.attr("style", avaterImg.attr("style") as any);
-    ctr.addClass("Avater-container");
-    ctr.attr("data-id", id);
-    if (!(["absolute", "fixed", "relative"].includes(getComputedStyle(ctr[0]).position)))
-        ctr.attr("style", "position: relative");
-    avaterImg.removeAttr("class");
-
+    toWarp.attrs.src = avatarUrl;
+    const ctr: Mithril.Vnode<any, any> = {
+        tag: "span",
+        attrs: {
+            "data-ctr": "avatar"
+        },
+        state: undefined,
+        children: [toWarp]
+    };
+    ctr.attrs.style = toWarp.attrs.style;
+    ctr.attrs.className = (toWarp.attrs.className ?? "") + " Avatar-container";
+    ctr.attrs['data-userAvatarHijackIid'] = ctx.userAvatarHijackIid;
+    //@ts-ignore
+    if (ctx.appendRelative) {
+        ctr.attrs.style = (ctr.attrs.style ?? "") + ";position:relative;"
+    }
+    toWarp.attrs.className = "";
     userInfo.container = ctr;
-    return userInfo;
-}
-
-export function overrideAllAvatars(element: JQuery<HTMLElement>): userElementInfo[] {
-    const ret: (userElementInfo | null)[] = [];
-    $(element).find("img.Avatar").each((_, _element) => { ret.push(overrideAvatar(_element)) });
-    return ret.filter(x => x !== null) as userElementInfo[];
+    applyDecoration(userInfo, ctx);
+    return ctr;
 }

@@ -5,11 +5,15 @@ let StyleFetcherIns: StyleFetcher | null = null;
 export class StyleFetcher {
     fetchIntervalId = -1;
     fetchId: Record<number, ((result: UserDecorations) => void)[]> = {};
+    cb: (() => void)[] = [];
     app: AllApplication;
 
     constructor(app: AllApplication) {
         StyleFetcherIns = this;
         this.app = app;
+    }
+    public done(c: () => any) {
+        this.cb.push(c);
     }
     public static getInstance(): StyleFetcher | null { return StyleFetcherIns; }
     public async sendFetch() {
@@ -24,6 +28,9 @@ export class StyleFetcher {
             fetchResultHandler[e].forEach(result => {
                 result(this.app.store.getById('user-decorations', e + "") as any);
             })
+        })
+        this.cb.forEach(cb => {
+            cb();
         })
     }
     public fetchStyle(id: number | string): Promise<UserDecorations | null> {
@@ -41,5 +48,8 @@ export class StyleFetcher {
                 this.fetchIntervalId = setTimeout(this.sendFetch.bind(this), 1000) as any;
             }
         })
+    }
+    public fetchStyleSync(id: number | string): UserDecorations | undefined {
+        return (this.app.store.getById('user-decorations', id + "") as UserDecorations) || undefined;
     }
 }

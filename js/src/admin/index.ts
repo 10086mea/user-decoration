@@ -18,6 +18,11 @@ app.initializers.add('xypp/user-decoration', () => {
     }, 'moderate', 30)
     .registerPermission({
       icon: 'fas fa-money-bill',
+      label: app.translator.trans('xypp-user-decoration.admin.permissions.create_decoration'),
+      permission: 'user.view_decoration',
+    }, 'moderate', 30)
+    .registerPermission({
+      icon: 'fas fa-money-bill',
       label: app.translator.trans('xypp-user-decoration.admin.permissions.delete_decoration'),
       permission: 'user.delete_decoration',
     }, 'moderate', 30)

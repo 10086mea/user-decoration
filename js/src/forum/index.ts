@@ -1,7 +1,7 @@
 import app from 'flarum/forum/app';
 import { StyleFetcher } from '../common/data/styleFetcher';
 import { initAvatarHijack } from '../common/utils/avatarHijack';
-import { extend } from 'flarum/common/extend';
+import { extend, override } from 'flarum/common/extend';
 import UserPage from 'flarum/forum/components/UserPage';
 import LinkButton from 'flarum/common/components/LinkButton';
 import { DecorationPage } from '../forum/components/DecorationPage';
@@ -10,11 +10,18 @@ import UserControls from 'flarum/forum/utils/UserControls';
 import Button from 'flarum/common/components/Button';
 import User from 'flarum/common/models/User';
 import Model from 'flarum/common/Model';
+import { storeBox } from './utils/storeBox';
 
 app.initializers.add('xypp/user-decoration', () => {
   //@ts-ignore
   User.prototype.canOfferDecoration = Model.attribute('canOfferDecoration');
-  new StyleFetcher(app);
+  //@ts-ignore
+  User.prototype.canViewDecoration = Model.attribute('canViewDecoration');
+  //@ts-ignore
+  User.prototype.canCreateDecoration = Model.attribute('canCreateDecoration');
+  //@ts-ignore
+  User.prototype.canDeleteDecoration = Model.attribute('canDeleteDecoration');
+  (new StyleFetcher(app)).done(m.redraw.sync);
   initAvatarHijack();
 
   app.routes['user.user_own_decoration'] = { path: '/u/:username/user_own_decoration', component: DecorationPage };
@@ -37,11 +44,15 @@ app.initializers.add('xypp/user-decoration', () => {
   });
   extend(UserControls, 'moderationControls', (items, user) => {
     //@ts-ignore
-    if (user.canOfferDecoration()) {
-      items.add('money', Button.component({
+    if (app.session.user?.canOfferDecoration()) {
+      items.add('offer-decoration', Button.component({
         icon: 'fas fa-money-bill',
-        onclick: () => app.modal.show(OfferDecorationModal, { user_id:user.id() })
+        onclick: () => app.modal.show(OfferDecorationModal, { user_id: user.id() })
       }, app.translator.trans('xypp-user-decoration.forum.user_controls.offer')));
     }
   });
+
+  if ('xypp-store' in flarum.extensions) {
+    storeBox(app);
+  }
 });

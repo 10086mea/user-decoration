@@ -37,12 +37,12 @@ export default class OfferDecorationModal extends Modal {
             m.redraw();
           }}
         ></Select>
-        {/* <DecorationBox
+        <DecorationBox
           noBtn={true}
           oncreate={(e) => (that.decorationBox = e as any)}
           decoration_id={that.decorationId}
           type={that.decorationType}
-        ></DecorationBox> */}
+        ></DecorationBox>
         <div className="paymodal-btn">
           <Button class="Button Button--primary" loading={this.loading} disabled={this.loading} onclick={this.offer.bind(this)}>
             {app.translator.trans('xypp-user-decoration.forum.modal.button')}
@@ -82,6 +82,9 @@ export default class OfferDecorationModal extends Modal {
         },
       });
       app.modal.close();
+      setRouteWithForcedRefresh('user.user_own_decoration', {
+        username: app.store.getById('users', (this.attrs as any).user_id)?.data?.attributes?.slug,
+      } as any);
     } catch (e: any) {
       app.alerts.show({ type: 'error' }, e.toString());
       this.loading = false;

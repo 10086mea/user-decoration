@@ -2,6 +2,7 @@ xypp-user-decoration:
   # For more details on the format
   # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   forum:
+    decorations: "Decorations"
     decoration-box:
       error: "Unknown Type"
       avatar: "Avatar Style"
@@ -10,8 +11,10 @@ xypp-user-decoration:
       usercard: "User Card Style"
       loading: "Loading"
     decoration:
+      delete_button: "Delete"
       remove_button: "Remove"
       change_button: "Change"
+      delete_confirm: "Sure to delete this decoration?"
     page:
       show-decorations: "Decorations"
     modal:
@@ -19,6 +22,21 @@ xypp-user-decoration:
       tip: "Please select a decoration"
       loading: "Loading"
       button: "Offer"
+    create: "Create"
+    create-success: "Successfully created decoration"
+    create-modal:
+      title: "Create Decoration"
+      type:
+        title: "Type"
+        avatar: "Avatar"
+        username: "Username"
+        post: "Post"
+        usercard: "UserCard"
+      name: "name"
+      desc: "Description"
+      style: "Style Sheet"
+      tip: "Use .base selector to select the target, .element-xxx to add new element"
+      button: "Create"
     user_controls:
       offer: "Offer decoration"
   admin:
@@ -26,3 +44,8 @@ xypp-user-decoration:
       view_decoration: "View other's decoration"
       delete_decoration: "Delete other's decoration"
       offer_decoration: "Offer decoration"
+xypp-store:
+  forum:
+    unavailable:
+      decoration:
+        dumplicate: "Has Own"
