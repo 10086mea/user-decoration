@@ -10,6 +10,7 @@ import ColorThief, { Color } from "color-thief-browser";
 import Mithril, { Vnode } from "mithril";
 import Post from "flarum/forum/components/Post";
 import UserCard from "flarum/forum/components/UserCard";
+import { DecorationWarpComponent } from "./DecorationWarpComponent";
 var globalUserDecorationHijackIid = 0;
 
 function usernameHijack() {
@@ -45,7 +46,8 @@ export function initDecorationHijack() {
         const encodedUserInfo: string = JSON.stringify({
             decorationId: this.data.attributes?.avatar_decoration,
             username: this.username(),
-            displayName: this.displayName(),
+            //@ts-ignore
+            displayName: this.realDisplayName(),
             id: this.id(),
             color
         });
@@ -57,10 +59,18 @@ export function initDecorationHijack() {
     const originalUserName = User.prototype.username;
     //@ts-ignore
     User.prototype.realUserName = originalUserName;
+    //@ts-ignore
+    User.prototype.realDisplayName = User.prototype.displayName;
 
     override(User.prototype, "displayName", function (orgUserName) {
         if (!usernameHijack()) return orgUserName();
-        return orgUserName() + "@" + this.id();
+        return new DecorationWarpComponent({
+            tag: "span",
+            attrs: {
+                className: "username-container",
+                user: this
+            }
+        }, orgUserName(), { user: this }, "username-text");
     });
 
 
@@ -76,10 +86,13 @@ export function initDecorationHijack() {
 
     // This function should be save and not to control it.
     extend(Component.prototype, ['onupdate', "oncreate"], async function () {
-        const ctr = $(`.decoration-container[data-userDecorationHijackIid="${(this as any).userDecorationHijackIid}"]`);
-        if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
-            ctr.css("position", "relative");
-        }
+        const ctr = $(`.decoration-container`);
+        ctr.each((_, el) => {
+            const ctr = $(el);
+            if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
+                ctr.css("position", "relative");
+            }
+        })
     });
     console.log("Decoration Hijack loaded");
 }
@@ -165,11 +178,7 @@ function hijackView(parent: Mithril.Vnode<any> | null, root: Mithril.Vnode<any>,
             } else return child;
         });
     } else if (parent && vnodeIsUsername(root)) {
-        parent.children = (parent.children as Mithril.Vnode<any>[]).map((child) => {
-            if (child === root) {
-                return createWrappedUsername(child, ctx);
-            } else return child;
-        });
+        createWrappedUserName(root, ctx);
     } else if (typeof root.children === 'object' && root.children['forEach']) {
         root.children.forEach((child: any) => {
             child && hijackView(root, child, stopAt, ctx);
@@ -180,7 +189,7 @@ function vnodeIsAvatar(vnode: any): boolean {
     return vnode && vnode.tag == "img" && vnode.attrs.className?.includes("Avatar") && /( |^)Avatar( |$)/.test(vnode.attrs.className) && (vnode.attrs as any).src;
 }
 function vnodeIsUsername(vnode: any): boolean {
-    return vnode && vnode.tag == "span" && vnode.attrs.className?.includes("username") && /( |^)username( |$)/.test(vnode.attrs.className);
+    return vnode && vnode instanceof DecorationWarpComponent && vnode.attrs.className == "username-container";
 }
 function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any) {
     const attrData = vnode.attrs.src.split("#");
@@ -225,31 +234,14 @@ function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any) {
     applyDecoration(userInfo, ctx);
     return ctr;
 }
-function createWrappedUsername(vnode: Mithril.Vnode<any, any>, ctx: any) {
-    let toWarp: Mithril.Vnode<any, any> = vnode
-    let un = toWarp.text?.toString();
-    const unProps = un?.split("@");
-    if (!unProps || unProps?.length < 2) return vnode;
-    const user = StyleFetcher.getInstance()?.getApp().store.getById("users", unProps.pop() as string);
-    if (!user) return vnode;
+function createWrappedUserName(vnode: any, ctx: any) {
+    const user = vnode.data.user;
     const userInfo: userElementInfo = {
+        decorationId: user.attribute("name_decoration"),
         username: user.attribute("username"),
-        decorationId: user.attribute("name_decoration")
+        container: vnode
     };
-    toWarp.text = userInfo.username;
-    const ctr: Vnode<any, any> = {
-        tag: "span",
-        children: [toWarp],
-        attrs: {
-            className: "username-container  decoration-container " + toWarp.attrs.className
-        },
-        state: undefined
-    };
-    ctr.attrs['data-userDecorationHijackIid'] = ctx.userDecorationHijackIid;
-    toWarp.attrs.className = "username-text";
-    userInfo.container = ctr;
     applyDecoration(userInfo, ctx);
-    return ctr;
 }
 function calculateAvatarColor(user: User, avatarUrl: string) {
     const image = new Image();
@@ -274,5 +266,4 @@ function calculateAvatarColor(user: User, avatarUrl: string) {
     image.crossOrigin = 'anonymous';
     image.src = avatarUrl ?? '';
 }
-
 export const avatarColor = calculateAvatarColor;

@@ -626,6 +626,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_forum_components_Post__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_components_Post__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! flarum/forum/components/UserCard */ "flarum/forum/components/UserCard");
 /* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_11__);
+/* harmony import */ var _DecorationWarpComponent__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./DecorationWarpComponent */ "./src/common/utils/DecorationWarpComponent.ts");
+
 
 
 
@@ -675,7 +677,8 @@ function initDecorationHijack() {
     var encodedUserInfo = JSON.stringify({
       decorationId: (_this$data$attributes = this.data.attributes) == null ? void 0 : _this$data$attributes.avatar_decoration,
       username: this.username(),
-      displayName: this.displayName(),
+      //@ts-ignore
+      displayName: this.realDisplayName(),
       id: this.id(),
       color: color
     });
@@ -685,9 +688,19 @@ function initDecorationHijack() {
   var originalUserName = (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).username;
   //@ts-ignore
   (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).realUserName = originalUserName;
+  //@ts-ignore
+  (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).realDisplayName = (flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype).displayName;
   (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.override)((flarum_common_models_User__WEBPACK_IMPORTED_MODULE_4___default().prototype), "displayName", function (orgUserName) {
     if (!usernameHijack()) return orgUserName();
-    return orgUserName() + "@" + this.id();
+    return new _DecorationWarpComponent__WEBPACK_IMPORTED_MODULE_12__.DecorationWarpComponent({
+      tag: "span",
+      attrs: {
+        className: "username-container",
+        user: this
+      }
+    }, orgUserName(), {
+      user: this
+    }, "username-text");
   });
   (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_3__.extend)((flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default().prototype), ['oninit'], function () {
     if (!usernameHijack() && !avatarHijack()) return;
@@ -704,15 +717,18 @@ function initDecorationHijack() {
     return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          ctr = $(".decoration-container[data-userDecorationHijackIid=\"" + this.userDecorationHijackIid + "\"]");
-          if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
-            ctr.css("position", "relative");
-          }
+          ctr = $(".decoration-container");
+          ctr.each(function (_, el) {
+            var ctr = $(el);
+            if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
+              ctr.css("position", "relative");
+            }
+          });
         case 2:
         case "end":
           return _context.stop();
       }
-    }, _callee, this);
+    }, _callee);
   })));
   console.log("Decoration Hijack loaded");
 }
@@ -805,11 +821,7 @@ function hijackView(parent, root, stopAt, ctx) {
       } else return child;
     });
   } else if (parent && vnodeIsUsername(root)) {
-    parent.children = parent.children.map(function (child) {
-      if (child === root) {
-        return createWrappedUsername(child, ctx);
-      } else return child;
-    });
+    createWrappedUserName(root, ctx);
   } else if (typeof root.children === 'object' && root.children['forEach']) {
     root.children.forEach(function (child) {
       child && hijackView(root, child, stopAt, ctx);
@@ -821,8 +833,7 @@ function vnodeIsAvatar(vnode) {
   return vnode && vnode.tag == "img" && ((_vnode$attrs$classNam = vnode.attrs.className) == null ? void 0 : _vnode$attrs$classNam.includes("Avatar")) && /( |^)Avatar( |$)/.test(vnode.attrs.className) && vnode.attrs.src;
 }
 function vnodeIsUsername(vnode) {
-  var _vnode$attrs$classNam2;
-  return vnode && vnode.tag == "span" && ((_vnode$attrs$classNam2 = vnode.attrs.className) == null ? void 0 : _vnode$attrs$classNam2.includes("username")) && /( |^)username( |$)/.test(vnode.attrs.className);
+  return vnode && vnode instanceof _DecorationWarpComponent__WEBPACK_IMPORTED_MODULE_12__.DecorationWarpComponent && vnode.attrs.className == "username-container";
 }
 function createWrappedAvatar(vnode, ctx) {
   var _toWarp$attrs$classNa;
@@ -871,32 +882,14 @@ function createWrappedAvatar(vnode, ctx) {
   (0,_DecorationApplier__WEBPACK_IMPORTED_MODULE_6__.applyDecoration)(userInfo, ctx);
   return ctr;
 }
-function createWrappedUsername(vnode, ctx) {
-  var _toWarp$text, _StyleFetcher$getInst3;
-  var toWarp = vnode;
-  var un = (_toWarp$text = toWarp.text) == null ? void 0 : _toWarp$text.toString();
-  var unProps = un == null ? void 0 : un.split("@");
-  if (!unProps || (unProps == null ? void 0 : unProps.length) < 2) return vnode;
-  var user = (_StyleFetcher$getInst3 = _data_styleFetcher__WEBPACK_IMPORTED_MODULE_5__.StyleFetcher.getInstance()) == null ? void 0 : _StyleFetcher$getInst3.getApp().store.getById("users", unProps.pop());
-  if (!user) return vnode;
+function createWrappedUserName(vnode, ctx) {
+  var user = vnode.data.user;
   var userInfo = {
+    decorationId: user.attribute("name_decoration"),
     username: user.attribute("username"),
-    decorationId: user.attribute("name_decoration")
+    container: vnode
   };
-  toWarp.text = userInfo.username;
-  var ctr = {
-    tag: "span",
-    children: [toWarp],
-    attrs: {
-      className: "username-container  decoration-container " + toWarp.attrs.className
-    },
-    state: undefined
-  };
-  ctr.attrs['data-userDecorationHijackIid'] = ctx.userDecorationHijackIid;
-  toWarp.attrs.className = "username-text";
-  userInfo.container = ctr;
   (0,_DecorationApplier__WEBPACK_IMPORTED_MODULE_6__.applyDecoration)(userInfo, ctx);
-  return ctr;
 }
 function calculateAvatarColor(user, avatarUrl) {
   var image = new Image();
@@ -922,6 +915,55 @@ function calculateAvatarColor(user, avatarUrl) {
   image.src = avatarUrl != null ? avatarUrl : '';
 }
 var avatarColor = calculateAvatarColor;
+
+/***/ }),
+
+/***/ "./src/common/utils/DecorationWarpComponent.ts":
+/*!*****************************************************!*\
+  !*** ./src/common/utils/DecorationWarpComponent.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   DecorationWarpComponent: () => (/* binding */ DecorationWarpComponent)
+/* harmony export */ });
+var DecorationWarpComponent = /*#__PURE__*/function () {
+  function DecorationWarpComponent(VNode, str, data, containerClass) {
+    this.states = void 0;
+    this.attrs = void 0;
+    this.element = void 0;
+    this.tag = void 0;
+    this.children = void 0;
+    this.stringRet = void 0;
+    this.data = void 0;
+    this.stringRet = str;
+    this.states = VNode.states;
+    this.attrs = VNode.attrs;
+    this.element = VNode.element;
+    this.tag = VNode.tag;
+    this.children = [{
+      tag: "span",
+      attrs: {
+        "class": containerClass
+      },
+      states: undefined,
+      children: [{
+        tag: "#",
+        children: str,
+        attrs: {},
+        states: undefined
+      }]
+    }];
+    this.data = data;
+  }
+  var _proto = DecorationWarpComponent.prototype;
+  _proto.toString = function toString() {
+    return this.stringRet;
+  };
+  return DecorationWarpComponent;
+}();
 
 /***/ }),
 
