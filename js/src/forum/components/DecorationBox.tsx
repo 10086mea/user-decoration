@@ -13,6 +13,7 @@ import UserCard from 'flarum/forum/components/UserCard';
 import { avatarColor } from '../../common/utils/DecorationHijack';
 import { generatePost } from '../utils/fakePost';
 import { applyDecorationOn } from '../../common/utils/DecorationApplier';
+import { showIf } from "../utils/nodeUtil"
 export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs> extends Component {
   type: string = '';
   id: number = 0;
@@ -22,9 +23,6 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
   changing = false;
   oninit(vnode: Mithril.Vnode<Attrs, this>) {
     super.oninit(vnode);
-    this.id = (this.attrs as any)['decoration_id'];
-    this.type = (this.attrs as any)['type'];
-    this.uodId = (this.attrs as any)['user_own_decoration_id'];
   }
 
   oncreate(vnode: Mithril.Vnode<Attrs, this>) {
@@ -33,9 +31,6 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
 
   onupdate(vnode: Mithril.Vnode<Attrs, this>) {
     super.onupdate(vnode);
-    this.id = (this.attrs as any)['decoration_id'];
-    this.type = (this.attrs as any)['type'];
-    this.uodId = (this.attrs as any)['user_own_decoration_id'];
   }
   async change() {
     this.changing = true;
@@ -51,6 +46,13 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
     m.redraw();
   }
   view() {
+    this.id = (this.attrs as any)['decoration_id'];
+    this.type = (this.attrs as any)['type'];
+    this.uodId = (this.attrs as any)['user_own_decoration_id'];
+    if (!["avatar", "name", "card", "post"].includes(this.type)) {
+      this.type = 'error';
+    }
+
     let content: any = <div class="error">{app.translator.trans('xypp-user-decoration.forum.decoration-box.error')}</div>;
 
     let decorationObj: userElementInfo = {
@@ -66,101 +68,78 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
         ?.fetchStyle(this.id)
         .then(() => m.redraw());
     }
+
+
+
     if (this.changing) {
       content = <LoadingIndicator></LoadingIndicator>;
     } else if (this.type == 'avatar') {
-      this.isCurrent = this.decoration && app.session.user?.data.attributes?.avatar_decoration == this.decoration.id();
       if (!app.forum.attribute("username_hijack")) {
-        content = [
-          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.avatar')}</h3>,
-          <div>{app.translator.trans('xypp-user-decoration.forum.decoration-box.closed')}</div>
-        ]
+        content = app.translator.trans('xypp-user-decoration.forum.decoration-box.closed');
       } else {
-        content = [
-          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.avatar')}</h3>,
-          <div class="avatar-box" data-uiid={this.id}>
-            {
-              <img
-                title="-"
-                class="Avatar"
-                src={
-                  //@ts-ignore
-                  (app.session.user?.realAvatarUrl() || '') + '#' + JSON.stringify(decorationObj)
-                }
-              />
-            }
-          </div>,
-
-        ];
+        content = <img title="-" class="Avatar"
+          src={
+            //@ts-ignore
+            (app.session.user?.realAvatarUrl() || '') + '#' + JSON.stringify(decorationObj)
+          }
+        />;
       }
     } else if (this.type == 'name') {
-      this.isCurrent = this.decoration && app.session.user?.data.attributes?.name_decoration == this.decoration?.id();
       if (!app.forum.attribute("username_hijack")) {
-        content = [
-          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.name')}</h3>,
-          <div>{app.translator.trans('xypp-user-decoration.forum.decoration-box.closed')}</div>
-        ]
+        content = app.translator.trans('xypp-user-decoration.forum.decoration-box.closed');
       } else {
-        const decorated = (<span class="username-container username"><span class="username-text">{
+        content = (<span class="username-container username"><span class="username-text">{
           //@ts-ignore
           app.session.user?.realUserName()
         }</span></span>);
-        if (this.decoration)
-          applyDecorationOn(decorated, this.decoration);
-        content = [
-          <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.name')}</h3>,
-          <div>{decorated}</div>
-        ];
+        if (this.decoration) applyDecorationOn(content, this.decoration);
       }
     } else if (this.type == "card") {
-      this.isCurrent = this.decoration && app.session.user?.data.attributes?.card_decoration == this.decoration?.id();
-      content = [
-        <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.card')}</h3>,
-        <div class="decoration-box-card-container">
-          <UserCard user={app.session.user} controlsButtonClassName="UserCard-controls App-primaryControl" className="UserCard--popover in" decoration_id={this.decoration?.id()}></UserCard>
-        </div>
-      ]
+      content = <div class="decoration-box-card-container">
+        <UserCard user={app.session.user} controlsButtonClassName="UserCard-controls App-primaryControl" className="UserCard--popover in" decoration_id={this.decoration?.id()}></UserCard>
+      </div>
+
     } else if (this.type == "post") {
-      this.isCurrent = this.decoration && app.session.user?.data.attributes?.post_decoration == this.decoration?.id();
       const afterDecoration = generatePost(app.session.user!);
       if (this.decoration)
         applyDecorationOn(afterDecoration, this.decoration);
-      content = [
-        <h3>{app.translator.trans('xypp-user-decoration.forum.decoration-box.post')}</h3>,
-        <div class="decoration-box-card-container">{afterDecoration}</div>
-      ]
+      content = <div class="decoration-box-card-container">{afterDecoration}</div>
     }
+
+    this.isCurrent = this.decoration && app.session.user?.attribute(`${this.type}_decoration`) == this.decoration?.id();
+
     return (
       <div className="DecorationBox">
+        <div className='decoration-head'>
+          <div className='decoration-name'>{this.decoration?.name()}</div>
+          <div className='decoration-type'>{app.translator.trans('xypp-user-decoration.forum.decoration-box.' + this.type)}</div>
+        </div>
         <div className='prev-warpper'>
           {content}
         </div>
         <div class="decoration-box-content">
           {this.decoration ? this.decoration!.desc() : app.translator.trans('xypp-user-decoration.forum.decoration-box.loading')}
         </div>
-        {(this.attrs as any).noBtn ? (
-          ''
-        ) : (
-          <Button class="Button Button--primary" loading={this.changing} disabled={this.changing} onclick={this.change.bind(this)}>
-            {this.isCurrent
-              ? app.translator.trans('xypp-user-decoration.forum.decoration.remove_button')
-              : app.translator.trans('xypp-user-decoration.forum.decoration.change_button')}
-          </Button>
-        )}
-        {(this.attrs as any).noDelete || !this.uodId ? (
-          ''
-        ) : (
-          <div class="delete-decoration" onclick={this.delete.bind(this)}>
-            <i class="fas fa-times" aria-label={app.translator.trans('xypp-user-decoration.forum.decoration.delete_button')}></i>
-          </div>
-        )}
-        {(this.attrs as any).noEdit ? (
-          ''
-        ) : (
-          <div class="edit-decoration" onclick={this.edit.bind(this)}>
-            <i class="fas fa-edit" aria-label={app.translator.trans('xypp-user-decoration.forum.decoration.edit_button')}></i>
-          </div>
-        )}
+        {// 变更装扮按钮
+          showIf(!((this.attrs as any).noBtn),
+            <Button class="Button Button--primary" loading={this.changing} disabled={this.changing} onclick={this.change.bind(this)}>
+              {this.isCurrent
+                ? app.translator.trans('xypp-user-decoration.forum.decoration.remove_button')
+                : app.translator.trans('xypp-user-decoration.forum.decoration.change_button')}
+            </Button>
+          )}
+        {// 删除按钮（右上角）
+          showIf(!((this.attrs as any).noDelete || !this.uodId),
+            <div class="delete-decoration" onclick={this.delete.bind(this)}>
+              <i class="fas fa-times" aria-label={app.translator.trans('xypp-user-decoration.forum.decoration.delete_button')}></i>
+            </div>
+          )}
+        {// 编辑按钮（左上角）
+          showIf(!((this.attrs as any).noEdit),
+            <div class="edit-decoration" onclick={this.edit.bind(this)}>
+              <i class="fas fa-edit" aria-label={app.translator.trans('xypp-user-decoration.forum.decoration.edit_button')}></i>
+            </div>
+          )}
       </div>
     );
   }
@@ -173,7 +152,7 @@ export default class DecorationBox<Attrs extends ComponentAttrs = ComponentAttrs
       });
       this.changing = false;
 
-      setRouteWithForcedRefresh(app.history.getCurrent().url);
+      setRouteWithForcedRefresh(app.route("user.user_own_decoration", { username: app.current.get("user").attribute("slug") }));
     }
   }
 

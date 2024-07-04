@@ -562,31 +562,210 @@ function applyDecoration(elementInfo, ctx) {
   if (!elementInfo.container) return;
   applyDecorationOn(elementInfo.container, elementInfo.decoration);
 }
+var elementCreations = {};
+var findingCache = {};
+var warningSent = {};
+function sendWarning(decId, key, message, Obj) {
+  if (!warningSent[decId]) warningSent[decId] = {};
+  if (!warningSent[decId][key]) {
+    warningSent[decId][key] = true;
+    console.warn(message, Obj);
+  }
+}
+function isVNodeMatchClass(vnode, className) {
+  var _vnode$attrs2, _vnode$tag;
+  if (className instanceof RegExp) {
+    var _vnode$attrs;
+    if (className.test(((_vnode$attrs = vnode.attrs) == null ? void 0 : _vnode$attrs.className) || "")) return true;
+  } else if (className == "*") {
+    return true;
+  } else if ((((_vnode$attrs2 = vnode.attrs) == null ? void 0 : _vnode$attrs2.className) || "").includes(className)) {
+    return true;
+  } else if ((((_vnode$tag = vnode.tag) == null ? void 0 : _vnode$tag.toString()) || "").includes(className)) {
+    return true;
+  }
+  return false;
+}
+function getVNodeWithCachePath(root, path, targetClass) {
+  var current = root;
+  var currentSelect;
+  while ((currentSelect = path.shift()) !== undefined) {
+    if (current.children && typeof current.children === "object" && current.children[currentSelect]) current = current.children[currentSelect];else return null;
+  }
+  if (isVNodeMatchClass(current, targetClass)) {
+    return current;
+  }
+  return null;
+}
+function getVNodeWithClass(root, className, curDep, path) {
+  if (path === void 0) {
+    path = [];
+  }
+  if (root.tag == "#") return;
+  var nxtLvl = curDep;
+  if (isVNodeMatchClass(root, className[curDep])) {
+    nxtLvl++;
+    if (nxtLvl == className.length) return root;
+  }
+  if (typeof root.children === "object" && typeof root.children.length === "number") {
+    for (var i = 0; i < root.children.length; i++) {
+      if (root.children[i]) {
+        var ret = getVNodeWithClass(root.children[i], className, nxtLvl, path);
+        if (ret) {
+          var _path;
+          (_path = path) == null || _path.unshift(i);
+          return ret;
+        }
+      }
+    }
+  }
+  return null;
+}
+function getElementAuto(element, decId, key, className) {
+  var ret = null;
+  if (findingCache[decId][key]) {
+    ret = getVNodeWithCachePath(element, findingCache[decId][key], className);
+    if (!ret) findingCache[decId][key] = false;
+  }
+  if (!ret) {
+    var path = [];
+    if (findingCache[decId][key] === false) ret = getVNodeWithClass(element, className, 0, undefined);else {
+      ret = getVNodeWithClass(element, className, 0, path);
+      if (ret) {
+        findingCache[decId][key] = path;
+      }
+    }
+  }
+  return ret;
+}
 /**
  * 在容器元素上应用样式
  * @param element 容器元素
  * @param decoration 用户装饰样式对象
  */
 function applyDecorationOn(element, decoration) {
-  var _exec;
-  var ctr = $("head #user-decoration-" + decoration.id());
-  if (!ctr.length) {
-    ctr = $("<style>").attr("id", "user-decoration-" + decoration.id());
-    var style = decoration.style() || "";
-    style = style.replace(/\.base/g, ".user-decoration-" + decoration.id());
-    ctr.html(style);
+  var decId = decoration.id();
+  if (!elementCreations[decId]) {
+    var styleText = decoration.style();
+    elementCreations[decId] = {};
+    var matchGene = styleText.matchAll(/\.(element-[^\[\{]*)((?:\[[a-zA-Z0-9]+=.+\])*)[^\[]/ig);
+    var res = matchGene.next();
+    while (!res.done) {
+      var ar = res.value;
+      var id = ar[1];
+      var regExt = ar[2];
+      var creation = {};
+      if (regExt) {
+        var subGen = regExt.matchAll(/\[([a-zA-Z0-9]+)=([^\]]+)\]/ig);
+        var _res = subGen.next();
+        while (!_res.done) {
+          var _ar = _res.value;
+          var argName = _ar[1];
+          var argValue = _ar[2].trim();
+          if (argValue.startsWith('"') && argValue.endsWith('"') || argValue.startsWith("'") && argValue.endsWith("'")) {
+            creation[argName] = argValue.slice(1, -1);
+          } else if (argValue.startsWith("/") && argValue.includes("/", 1)) {
+            var tmp = argValue.split("/");
+            creation[argName] = new RegExp(tmp[1], tmp[2]);
+          } else creation[argName] = argValue;
+          _res = subGen.next();
+        }
+      }
+      if (!creation.tag || creation.tag == "#") {
+        creation.tag = "span";
+      }
+      if (creation.copy) {
+        if (typeof creation.copy === "string") {
+          creation.copy = creation.copy.split(" ");
+        } else creation.copy = [creation.copy];
+      }
+      if (creation.parent) {
+        if (typeof creation.parent === "string") {
+          creation.parent = creation.parent.split(" ");
+        } else creation.parent = [creation.parent];
+      }
+      elementCreations[decId][id] = creation;
+      res = matchGene.next();
+    }
+    styleText = styleText.replace(/(\.element-[^\[]*)(?:\[[a-zA-Z0-9]*=.*\])*([^\[])/ig, "$1$2");
+    styleText = styleText.replace(/\.base/g, ".user-decoration-" + decId);
+    var ctr = $("<style>").attr("id", "user-decoration-" + decId);
+    ctr.html(styleText);
     $("head").append(ctr);
   }
-  (_exec = /\.element-[a-zA-Z0-9-_]+{/.exec(ctr.html())) == null || _exec.forEach(function (value, i, ar) {
-    element.children.push({
-      tag: "span",
-      state: undefined,
-      attrs: {
-        className: value.substring(1, value.length - 1)
+  if (!findingCache[decId]) findingCache[decId] = {};
+  var toApply = [];
+  Object.keys(elementCreations[decId]).forEach(function (key) {
+    var _parent$children;
+    var args = elementCreations[decId][key];
+    var parent = null;
+    if (args.parent) {
+      parent = getElementAuto(element, decId, key, args.parent);
+      if (!parent) {
+        sendWarning(decId, key, "[DecorationApplier] Parent element is not found.", {
+          createSpec: args,
+          element: element
+        });
+        return;
       }
-    });
+    } else parent = element;
+    if (!parent.children || typeof parent.children !== "object" || typeof ((_parent$children = parent.children) == null ? void 0 : _parent$children.length) !== "number") {
+      sendWarning(decId, key, "[DecorationApplier] Parent element is not a fragment.", {
+        createSpec: args,
+        parent: parent,
+        element: element
+      });
+      return;
+    }
+    var newElement = null;
+    if (args.copy) {
+      var copyTarget = getElementAuto(element, decId, key, args.copy);
+      if (copyTarget) {
+        newElement = $.extend(true, {}, copyTarget);
+      }
+      if (!newElement) {
+        sendWarning(decId, key, "[DecorationApplier] To copy element not found", {
+          createSpec: args,
+          element: element
+        });
+        return;
+      }
+      if (args["class"]) {
+        newElement.attrs.className = (newElement.attrs.className || "") + " " + args["class"];
+      }
+      newElement.attrs.className = (newElement.attrs.className || "") + " " + key;
+    } else {
+      // 非拷贝，添加新的元素
+      newElement = {
+        tag: args.tag,
+        states: undefined,
+        attrs: {
+          className: (args["class"] || "") + " " + key,
+          style: args.style || ""
+        },
+        children: [{
+          tag: "#",
+          children: args.content || "",
+          attrs: {},
+          states: undefined
+        }]
+      };
+    }
+    var afterIndex = element.children.length - 1;
+    if (args.after && element.children) {
+      for (var i = 0; i < element.children.length; i++) {
+        if (isVNodeMatchClass(element.children[i], args.after)) {
+          afterIndex = i;
+          break;
+        }
+      }
+    }
+    toApply.push([parent, afterIndex, newElement]);
   });
-  if (!new RegExp("( |^)user-decoration-" + decoration.id() + "( |$)").test(element.attrs.className)) element.attrs.className += " user-decoration-" + decoration.id();
+  toApply.forEach(function (element) {
+    element[0].children.splice(element[1] + 1, 0, element[2]);
+  });
+  if (!new RegExp("( |^)user-decoration-" + decId + "( |$)").test(element.attrs.className)) element.attrs.className += " user-decoration-" + decId;
   if (!/( |^)has-user-decoration( |$)/.test(element.attrs.className)) element.attrs.className += " has-user-decoration";
 }
 
@@ -990,9 +1169,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_5__);
 /* harmony import */ var flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! flarum/common/components/Select */ "flarum/common/components/Select");
 /* harmony import */ var flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
-/* harmony import */ var flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! flarum/common/components/LinkButton */ "flarum/common/components/LinkButton");
-/* harmony import */ var flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! flarum/common/utils/setRouteWithForcedRefresh */ "flarum/common/utils/setRouteWithForcedRefresh");
+/* harmony import */ var flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../common/data/styleFetcher */ "./src/common/data/styleFetcher.ts");
+/* harmony import */ var flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! flarum/common/components/LinkButton */ "flarum/common/components/LinkButton");
+/* harmony import */ var flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_9__);
+
 
 
 
@@ -1077,13 +1259,13 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
       type: "submit",
       loading: this.loading,
       disabled: this.loading
-    }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.button')), m((flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_8___default()), {
+    }, this.attrs.decoration_id ? flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.edit-button') : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.button')), this.attrs.decoration_id ? m((flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_9___default()), {
       loading: this.loading,
       disabled: this.loading,
       onclick: this["delete"].bind(this)
     }, m("i", {
       "class": "fas fa-trash"
-    }), flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.delete-button')))));
+    }), flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-modal.delete-button')) : "")));
   };
   _proto.onready = function onready() {
     var _this2 = this;
@@ -1091,7 +1273,7 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
     if (this.decorationId) {
       var _StyleFetcher$getInst;
       this.loading = true;
-      (_StyleFetcher$getInst = _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_7__.StyleFetcher.getInstance()) == null || _StyleFetcher$getInst.fetchStyle(this.decorationId).then(function (style) {
+      (_StyleFetcher$getInst = _common_data_styleFetcher__WEBPACK_IMPORTED_MODULE_8__.StyleFetcher.getInstance()) == null || _StyleFetcher$getInst.fetchStyle(this.decorationId).then(function (style) {
         _this2.decoration = style;
         _this2.loading = false;
         _this2.$('#xypp-user-decoration-create-ipt-name').val(style.name());
@@ -1129,17 +1311,20 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
             flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().alerts.show({
               type: 'success'
             }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.create-success'));
-            _context.next = 12;
+            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().route("user.user_own_decoration", {
+              username: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().current.get("user").attribute("slug")
+            }));
+            _context.next = 13;
             break;
-          case 9:
-            _context.prev = 9;
+          case 10:
+            _context.prev = 10;
             _context.t0 = _context["catch"](2);
             this.loading = false;
-          case 12:
+          case 13:
           case "end":
             return _context.stop();
         }
-      }, _callee, this, [[2, 9]]);
+      }, _callee, this, [[2, 10]]);
     }));
     function onsubmit(_x) {
       return _onsubmit.apply(this, arguments);
@@ -1169,17 +1354,20 @@ var CreateDecorationModal = /*#__PURE__*/function (_Modal) {
             flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().alerts.show({
               type: 'success'
             }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.delete-success'));
-            _context2.next = 13;
+            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().route("user.user_own_decoration", {
+              username: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().current.get("user").attribute("slug")
+            }));
+            _context2.next = 14;
             break;
-          case 10:
-            _context2.prev = 10;
+          case 11:
+            _context2.prev = 11;
             _context2.t0 = _context2["catch"](3);
             this.loading = false;
-          case 13:
+          case 14:
           case "end":
             return _context2.stop();
         }
-      }, _callee2, this, [[3, 10]]);
+      }, _callee2, this, [[3, 11]]);
     }));
     function _delete() {
       return _delete2.apply(this, arguments);
@@ -1223,6 +1411,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10__);
 /* harmony import */ var _utils_fakePost__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../utils/fakePost */ "./src/forum/utils/fakePost.tsx");
 /* harmony import */ var _common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../common/utils/DecorationApplier */ "./src/common/utils/DecorationApplier.ts");
+/* harmony import */ var _utils_nodeUtil__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../utils/nodeUtil */ "./src/forum/utils/nodeUtil.ts");
+
 
 
 
@@ -1255,18 +1445,12 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
   var _proto = DecorationBox.prototype;
   _proto.oninit = function oninit(vnode) {
     _Component.prototype.oninit.call(this, vnode);
-    this.id = this.attrs['decoration_id'];
-    this.type = this.attrs['type'];
-    this.uodId = this.attrs['user_own_decoration_id'];
   };
   _proto.oncreate = function oncreate(vnode) {
     _Component.prototype.oncreate.call(this, vnode);
   };
   _proto.onupdate = function onupdate(vnode) {
     _Component.prototype.onupdate.call(this, vnode);
-    this.id = this.attrs['decoration_id'];
-    this.type = this.attrs['type'];
-    this.uodId = this.attrs['user_own_decoration_id'];
   };
   _proto.change = /*#__PURE__*/function () {
     var _change = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee() {
@@ -1299,6 +1483,13 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
     return change;
   }();
   _proto.view = function view() {
+    var _app$session$user3, _this$decoration2, _this$decoration3;
+    this.id = this.attrs['decoration_id'];
+    this.type = this.attrs['type'];
+    this.uodId = this.attrs['user_own_decoration_id'];
+    if (!["avatar", "name", "card", "post"].includes(this.type)) {
+      this.type = 'error';
+    }
     var content = m("div", {
       "class": "error"
     }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.error'));
@@ -1319,83 +1510,85 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
     if (this.changing) {
       content = m((flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_8___default()), null);
     } else if (this.type == 'avatar') {
-      var _app$session$user;
-      this.isCurrent = this.decoration && ((_app$session$user = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user = _app$session$user.data.attributes) == null ? void 0 : _app$session$user.avatar_decoration) == this.decoration.id();
       if (!flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().forum.attribute("username_hijack")) {
-        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.avatar')), m("div", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.closed'))];
+        content = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.closed');
       } else {
-        var _app$session$user2;
-        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.avatar')), m("div", {
-          "class": "avatar-box",
-          "data-uiid": this.id
-        }, m("img", {
+        var _app$session$user;
+        content = m("img", {
           title: "-",
           "class": "Avatar",
           src:
           //@ts-ignore
-          (((_app$session$user2 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user2.realAvatarUrl()) || '') + '#' + JSON.stringify(decorationObj)
-        }))];
+          (((_app$session$user = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user.realAvatarUrl()) || '') + '#' + JSON.stringify(decorationObj)
+        });
       }
     } else if (this.type == 'name') {
-      var _app$session$user3, _this$decoration;
-      this.isCurrent = this.decoration && ((_app$session$user3 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user3 = _app$session$user3.data.attributes) == null ? void 0 : _app$session$user3.name_decoration) == ((_this$decoration = this.decoration) == null ? void 0 : _this$decoration.id());
       if (!flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().forum.attribute("username_hijack")) {
-        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.name')), m("div", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.closed'))];
+        content = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.closed');
       } else {
-        var _app$session$user4;
-        var decorated = m("span", {
+        var _app$session$user2;
+        content = m("span", {
           "class": "username-container username"
         }, m("span", {
           "class": "username-text"
         }, //@ts-ignore
-        (_app$session$user4 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user4.realUserName()));
-        if (this.decoration) (0,_common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__.applyDecorationOn)(decorated, this.decoration);
-        content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.name')), m("div", null, decorated)];
+        (_app$session$user2 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user2.realUserName()));
+        if (this.decoration) (0,_common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__.applyDecorationOn)(content, this.decoration);
       }
     } else if (this.type == "card") {
-      var _app$session$user5, _this$decoration2, _this$decoration3;
-      this.isCurrent = this.decoration && ((_app$session$user5 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user5 = _app$session$user5.data.attributes) == null ? void 0 : _app$session$user5.card_decoration) == ((_this$decoration2 = this.decoration) == null ? void 0 : _this$decoration2.id());
-      content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.card')), m("div", {
+      var _this$decoration;
+      content = m("div", {
         "class": "decoration-box-card-container"
       }, m((flarum_forum_components_UserCard__WEBPACK_IMPORTED_MODULE_10___default()), {
         user: (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user,
         controlsButtonClassName: "UserCard-controls App-primaryControl",
         className: "UserCard--popover in",
-        decoration_id: (_this$decoration3 = this.decoration) == null ? void 0 : _this$decoration3.id()
-      }))];
+        decoration_id: (_this$decoration = this.decoration) == null ? void 0 : _this$decoration.id()
+      }));
     } else if (this.type == "post") {
-      var _app$session$user6, _this$decoration4;
-      this.isCurrent = this.decoration && ((_app$session$user6 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null || (_app$session$user6 = _app$session$user6.data.attributes) == null ? void 0 : _app$session$user6.post_decoration) == ((_this$decoration4 = this.decoration) == null ? void 0 : _this$decoration4.id());
       var afterDecoration = (0,_utils_fakePost__WEBPACK_IMPORTED_MODULE_11__.generatePost)((flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user);
       if (this.decoration) (0,_common_utils_DecorationApplier__WEBPACK_IMPORTED_MODULE_12__.applyDecorationOn)(afterDecoration, this.decoration);
-      content = [m("h3", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.post')), m("div", {
+      content = m("div", {
         "class": "decoration-box-card-container"
-      }, afterDecoration)];
+      }, afterDecoration);
     }
+    this.isCurrent = this.decoration && ((_app$session$user3 = (flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().session).user) == null ? void 0 : _app$session$user3.attribute(this.type + "_decoration")) == ((_this$decoration2 = this.decoration) == null ? void 0 : _this$decoration2.id());
     return m("div", {
       className: "DecorationBox"
     }, m("div", {
+      className: "decoration-head"
+    }, m("div", {
+      className: "decoration-name"
+    }, (_this$decoration3 = this.decoration) == null ? void 0 : _this$decoration3.name()), m("div", {
+      className: "decoration-type"
+    }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.' + this.type))), m("div", {
       className: "prev-warpper"
     }, content), m("div", {
       "class": "decoration-box-content"
-    }, this.decoration ? this.decoration.desc() : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.loading')), this.attrs.noBtn ? '' : m((flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_6___default()), {
+    }, this.decoration ? this.decoration.desc() : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration-box.loading')),
+    // 变更装扮按钮
+    (0,_utils_nodeUtil__WEBPACK_IMPORTED_MODULE_13__.showIf)(!this.attrs.noBtn, m((flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_6___default()), {
       "class": "Button Button--primary",
       loading: this.changing,
       disabled: this.changing,
       onclick: this.change.bind(this)
-    }, this.isCurrent ? flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.remove_button') : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.change_button')), this.attrs.noDelete || !this.uodId ? '' : m("div", {
+    }, this.isCurrent ? flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.remove_button') : flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.change_button'))),
+    // 删除按钮（右上角）
+    (0,_utils_nodeUtil__WEBPACK_IMPORTED_MODULE_13__.showIf)(!(this.attrs.noDelete || !this.uodId), m("div", {
       "class": "delete-decoration",
       onclick: this["delete"].bind(this)
     }, m("i", {
       "class": "fas fa-times",
       "aria-label": flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.delete_button')
-    })), this.attrs.noEdit ? '' : m("div", {
+    }))),
+    // 编辑按钮（左上角）
+    (0,_utils_nodeUtil__WEBPACK_IMPORTED_MODULE_13__.showIf)(!this.attrs.noEdit, m("div", {
       "class": "edit-decoration",
       onclick: this.edit.bind(this)
     }, m("i", {
       "class": "fas fa-edit",
       "aria-label": flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.decoration.edit_button')
-    })));
+    }))));
   };
   _proto["delete"] = /*#__PURE__*/function () {
     var _delete2 = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_2___default().mark(function _callee2() {
@@ -1413,7 +1606,9 @@ var DecorationBox = /*#__PURE__*/function (_Component) {
             });
           case 4:
             this.changing = false;
-            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().history.getCurrent().url);
+            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_9___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().route("user.user_own_decoration", {
+              username: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().current.get("user").attribute("slug")
+            }));
           case 6:
           case "end":
             return _context2.stop();
@@ -1653,13 +1848,7 @@ var OfferDecorationModal = /*#__PURE__*/function (_Modal) {
     }, m("p", null, flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().translator.trans('xypp-user-decoration.forum.modal.tip')), m((flarum_common_components_Select__WEBPACK_IMPORTED_MODULE_6___default()), {
       options: this.records,
       value: this.value,
-      onchange: function onchange(e) {
-        that.value = e;
-        var dec = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().store.getById('user-decorations', e);
-        that.decorationType = dec.type();
-        that.decorationId = dec.id();
-        m.redraw();
-      }
+      onchange: this.change.bind(this)
     }), m(_components_DecorationBox__WEBPACK_IMPORTED_MODULE_8__["default"], {
       noBtn: true,
       oncreate: function oncreate(e) {
@@ -1708,7 +1897,9 @@ var OfferDecorationModal = /*#__PURE__*/function (_Modal) {
             });
           case 4:
             flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().modal.close();
-            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().history.getCurrent().url);
+            flarum_common_utils_setRouteWithForcedRefresh__WEBPACK_IMPORTED_MODULE_7___default()(flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().route("user.user_own_decoration", {
+              username: flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().current.get("user").attribute("slug")
+            }));
             _context.next = 11;
             break;
           case 8:
@@ -1726,6 +1917,13 @@ var OfferDecorationModal = /*#__PURE__*/function (_Modal) {
     }
     return offer;
   }();
+  _proto.change = function change(e) {
+    this.value = e;
+    var dec = flarum_forum_app__WEBPACK_IMPORTED_MODULE_4___default().store.getById('user-decorations', e);
+    this.decorationType = dec.type();
+    this.decorationId = dec.id();
+    m.redraw();
+  };
   return OfferDecorationModal;
 }((flarum_common_components_Modal__WEBPACK_IMPORTED_MODULE_3___default()));
 
@@ -1876,6 +2074,23 @@ function generatePost(user) {
 
 /***/ }),
 
+/***/ "./src/forum/utils/nodeUtil.ts":
+/*!*************************************!*\
+  !*** ./src/forum/utils/nodeUtil.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   showIf: () => (/* binding */ showIf)
+/* harmony export */ });
+function showIf(judgement, vnode, def) {
+  return judgement ? vnode : def || "";
+}
+
+/***/ }),
+
 /***/ "./src/forum/utils/storeBox.tsx":
 /*!**************************************!*\
   !*** ./src/forum/utils/storeBox.tsx ***!
@@ -1887,26 +2102,66 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   storeBox: () => (/* binding */ storeBox)
 /* harmony export */ });
-/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! flarum/common/extend */ "flarum/common/extend");
-/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(flarum_common_extend__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _components_DecorationBox__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/DecorationBox */ "./src/forum/components/DecorationBox.tsx");
+/* harmony import */ var _babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/esm/asyncToGenerator */ "./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
+/* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! flarum/common/extend */ "flarum/common/extend");
+/* harmony import */ var flarum_common_extend__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(flarum_common_extend__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _components_DecorationBox__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../components/DecorationBox */ "./src/forum/components/DecorationBox.tsx");
+
+
 
 
 function storeBox(app) {
-  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_0__.override)(flarum.extensions['xypp-store'].StoreItemUtils.prototype, 'createItemShowCase', function (org, items) {
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_2__.override)(flarum.extensions['xypp-store'].StoreItemUtils.prototype, 'createItemShowCase', function (org, items) {
     if (items.provider() != 'decoration') {
       return org(items);
     }
     var info = items.itemData();
     return m("div", {
       "class": "decoration-ShowCase"
-    }, m(_components_DecorationBox__WEBPACK_IMPORTED_MODULE_1__["default"], {
+    }, m(_components_DecorationBox__WEBPACK_IMPORTED_MODULE_3__["default"], {
       decoration_id: info.id,
       type: info.type,
       noBtn: true,
       noDelete: true,
       noEdit: true
     }));
+  });
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_2__.override)(flarum.extensions['xypp-store'].CreateItemModal.prototype, 'getProviderData', /*#__PURE__*/function () {
+    var _ref = (0,_babel_runtime_helpers_esm_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().mark(function _callee(origin, e) {
+      var data, that;
+      return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_1___default().wrap(function _callee$(_context) {
+        while (1) switch (_context.prev = _context.next) {
+          case 0:
+            if (!(e == "decoration")) {
+              _context.next = 6;
+              break;
+            }
+            _context.next = 3;
+            return app.store.find('user_decoration_all');
+          case 3:
+            data = _context.sent;
+            //@ts-ignore
+            that = this;
+            app.store.all('user-decorations').forEach(function (decoration) {
+              that.providerDatas[parseInt(decoration.id())] = '[' + app.translator.trans('xypp-user-decoration.forum.decoration-box.' + decoration.attribute('type')) + ']' + decoration.attribute('name') + ':' + decoration.attribute('desc');
+            });
+          case 6:
+            _context.next = 8;
+            return origin(e);
+          case 8:
+          case "end":
+            return _context.stop();
+        }
+      }, _callee, this);
+    }));
+    return function (_x, _x2) {
+      return _ref.apply(this, arguments);
+    };
+  }());
+  (0,flarum_common_extend__WEBPACK_IMPORTED_MODULE_2__.extend)(flarum.extensions['xypp-store'].CreateItemModal.prototype, 'oninit', function () {
+    this.providers['decoration'] = app.translator.trans("xypp-store.forum.create-modal.providers.decoration");
   });
 }
 

@@ -56,11 +56,13 @@ export default class CreateDecorationModal extends Modal {
           </div>
           <div className="Form-group">
             <Button class="Button Button--primary" type="submit" loading={this.loading} disabled={this.loading}>
-              {app.translator.trans('xypp-user-decoration.forum.create-modal.button')}
+              {(this.attrs as any).decoration_id ? app.translator.trans('xypp-user-decoration.forum.create-modal.edit-button') : app.translator.trans('xypp-user-decoration.forum.create-modal.button')}
             </Button>
-            <LinkButton loading={this.loading} disabled={this.loading} onclick={this.delete.bind(this)}>
-              <i class="fas fa-trash"></i>{app.translator.trans('xypp-user-decoration.forum.create-modal.delete-button')}
-            </LinkButton>
+            {(this.attrs as any).decoration_id ? (
+              <LinkButton loading={this.loading} disabled={this.loading} onclick={this.delete.bind(this)}>
+                <i class="fas fa-trash"></i>{app.translator.trans('xypp-user-decoration.forum.create-modal.delete-button')}
+              </LinkButton>) : ""
+            }
           </div>
         </div>
       </div>
@@ -102,6 +104,8 @@ export default class CreateDecorationModal extends Modal {
       });
       app.modal.close();
       app.alerts.show({ type: 'success' }, app.translator.trans('xypp-user-decoration.forum.create-success'));
+
+      setRouteWithForcedRefresh(app.route("user.user_own_decoration", { username: app.current.get("user").attribute("slug") }));
     } catch (e: any) {
       this.loading = false;
     }
@@ -116,6 +120,8 @@ export default class CreateDecorationModal extends Modal {
       });
       app.modal.close();
       app.alerts.show({ type: 'success' }, app.translator.trans('xypp-user-decoration.forum.delete-success'));
+
+      setRouteWithForcedRefresh(app.route("user.user_own_decoration", { username: app.current.get("user").attribute("slug") }));
     } catch (e: any) {
       this.loading = false;
     }

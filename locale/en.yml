@@ -27,6 +27,7 @@ xypp-user-decoration:
     create-success: "Successfully created decoration"
     create-modal:
       edit-title: "Edit Decoration#{0}"
+      edit-button: "Edit"
       title: "Create Decoration"
       type:
         title: "Type"
@@ -63,6 +64,11 @@ xypp-user-decoration:
         desc: "Is view-all promission enabled?"
 xypp-store:
   forum:
+    type:
+      decoration: "Decoration"
     unavailable:
       decoration:
         dumplicate: "Has Own"
+    create-modal:
+      providers:
+        decoration: "Decoration"

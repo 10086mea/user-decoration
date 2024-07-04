@@ -27,6 +27,7 @@ xypp-user-decoration:
     create-success: "创建成功"
     create-modal:
       edit-title: "编辑装扮#{0}"
+      edit-button: "编辑"
       title: "创建装扮"
       type:
         title: "类型"
@@ -63,6 +64,11 @@ xypp-user-decoration:
         desc: "查看所有的装饰的权限是否生效"
 xypp-store:
   forum:
+    type:
+      decoration: "装扮"
     unavailable:
       decoration:
         dumplicate: "已拥有"
+    create-modal:
+      providers:
+        decoration: "装扮"
