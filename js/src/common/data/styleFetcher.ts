@@ -42,8 +42,8 @@ export class StyleFetcher {
         if (stored) return Promise.resolve(stored as any);
 
         return new Promise<UserDecorations>((resolve) => {
-            this.fetchId[id] = this.fetchId[id] || [];
-            this.fetchId[id].push(resolve);
+            this.fetchId[id as number] = this.fetchId[id as number] || [];
+            this.fetchId[id as number].push(resolve);
             if (this.fetchIntervalId == -1) {
                 this.fetchIntervalId = setTimeout(this.sendFetch.bind(this), 400) as any;
             }

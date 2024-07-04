@@ -94,7 +94,7 @@ function getVNodeWithClass(root: Vnode<any, any>, className: string[] | RegExp[]
 function getElementAuto(element: any, decId: any, key: any, className: string | RegExp) {
     let ret = null;
     if (findingCache[decId][key]) {
-        ret = getVNodeWithCachePath(element, findingCache[decId][key], className);
+        ret = getVNodeWithCachePath(element, findingCache[decId][key] as number[], className);
         if (!ret) findingCache[decId][key] = false;
     }
     if (!ret) {
