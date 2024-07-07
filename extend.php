@@ -69,33 +69,6 @@ $ret = [
         ->default('xypp-user-decoration.view-all', true),
 ];
 if (class_exists("\\Xypp\\Store\\Extend\\StoreItemProvider")) {
-    $ret[] = (new \Xypp\Store\Extend\StoreItemProvider())->provide('decoration', function ($item) {
-        $decoration = UserDecoration::findOrFail($item->provider_data);
-        return [
-            "name" => $decoration->name,
-            "desc" => $decoration->desc,
-            "type" => $decoration->type,
-            "id" => $decoration->id
-        ];
-    }, function ($actor, $item) {
-        UserOwnDecorationUtil::AssertAddUserDecorationId($actor->id, $item->provider_data);
-        $newModel = new UserOwnDecoration();
-        $newModel->user_id = $actor->id;
-        $newModel->decoration_id = $item->provider_data;
-        $decoration = UserDecoration::findOrFail($newModel->decoration_id);
-        $newModel->type = $decoration->type;
-        $newModel->save();
-        return true;
-    })->limit('decoration', function ($actor, $item, $count) {
-        if (
-            UserOwnDecoration::where([
-                'user_id' => $actor->id,
-                'decoration_id' => $item->provider_data
-            ])->exists()
-        ) {
-            return "decoration.dumplicate";
-        }
-        return true;
-    });
+    $ret[] = (new \Xypp\Store\Extend\StoreItemProvider())->provide(DecorationStoreProvider::class);
 }
 return $ret;

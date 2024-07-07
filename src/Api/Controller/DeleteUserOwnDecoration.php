@@ -34,13 +34,13 @@ class DeleteUserOwnDecoration extends AbstractDeleteController
         }
 
         $user = User::findOrFail($model->user_id);
-        if ($user->avatar_decoration == $model->id)
+        if ($user->avatar_decoration == $model->decoration_id)
             $user->avatar_decoration = null;
-        if ($user->name_decoration == $model->id)
+        if ($user->name_decoration == $model->decoration_id)
             $user->name_decoration = null;
-        if ($user->card_decoration == $model->id)
+        if ($user->card_decoration == $model->decoration_id)
             $user->card_decoration = null;
-        if ($user->post_decoration == $model->id)
+        if ($user->post_decoration == $model->decoration_id)
             $user->post_decoration = null;
         if ($user->isDirty())
             $user->save();
