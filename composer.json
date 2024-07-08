@@ -29,7 +29,7 @@
             "title": "User Decoration",
             "category": "feature",
             "icon": {
-                "name": "fa fas-brush",
+                "name": "fas fa-brush",
                 "color": "#ffebee",
                 "backgroundColor": "#ebfffc"
             },

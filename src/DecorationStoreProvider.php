@@ -7,6 +7,8 @@ use Xypp\Store\AbstractStoreProvider;
 use Xypp\Store\PurchaseHistory;
 use Xypp\Store\StoreItem;
 use Xypp\UserDecoration\Utils\UserOwnDecorationUtil;
+use Xypp\Store\Context\PurchaseContext;
+use Xypp\Store\Context\UseContext;
 
 class DecorationStoreProvider extends AbstractStoreProvider
 {
@@ -14,7 +16,7 @@ class DecorationStoreProvider extends AbstractStoreProvider
     public $canSeeInHistory = true;
     public $canUse = true;
     public $singleHold = true;
-    public function useItem(PurchaseHistory $item, User $user, string $data): bool
+    public function useItem(PurchaseHistory $item, User $user, string $data, UseContext $context): bool
     {
         try {
             $decoration = UserDecoration::findOrFail($item->store_item()->first()->provider_data);
@@ -25,7 +27,7 @@ class DecorationStoreProvider extends AbstractStoreProvider
         }
         return true;
     }
-    public function purchase(StoreItem $item, User $user, PurchaseHistory|null $old = null): array|bool|string
+    public function purchase(StoreItem $item, User $user, PurchaseHistory|null $old = null, PurchaseContext $context): array|bool|string
     {
         if ($old) {
             if (UserOwnDecoration::find($old->data)->exists())
