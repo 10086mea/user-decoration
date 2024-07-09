@@ -1,6 +1,6 @@
 {
     "name": "xypp/user-decoration",
-    "description": "Add decoration for user avatar.",
+    "description": "Add decoration for user avatar/name/card/post.",
     "keywords": [
         "flarum"
     ],
