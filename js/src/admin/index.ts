@@ -1,9 +1,5 @@
 import app from 'flarum/admin/app';
-import { StyleFetcher } from '../common/data/styleFetcher';
-import { initDecorationHijack } from '../common/utils/DecorationHijack';
-
 app.initializers.add('xypp/user-decoration', () => {
-  new StyleFetcher(app);
   app.extensionData.for('xypp-user-decoration')
     .registerSetting({
       setting: 'xypp-user-decoration.username_hijack',

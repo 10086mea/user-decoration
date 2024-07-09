@@ -10,7 +10,7 @@
         "flarum/core": "^1.2.0"
     },
     "require-dev": {
-        "xypp/store": "*"
+        "xypp/store": "^0.1.0"
     },
     "authors": [
         {
@@ -62,11 +62,5 @@
         "psr-4": {
             "Xypp\\UserDecoration\\Tests\\": "tests/"
         }
-    },
-    "repositories":[
-        {
-            "type": "path",
-            "url": "../*/"
-        }
-    ]
+    }
 }
