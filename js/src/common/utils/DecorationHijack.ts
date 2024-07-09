@@ -92,7 +92,8 @@ export function initDecorationHijack() {
             if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
                 ctr.css("position", "relative");
             }
-            if (ctr.length && window.getComputedStyle(ctr[0]).zIndex === "auto") {
+            // User card and post component has controls a large amount of elements and setting z-index may cause many problems.
+            if (ctr.length && !ctr.hasClass("Post") && !ctr.hasClass("UserCard") && window.getComputedStyle(ctr[0]).zIndex === "auto") {
                 ctr.css("z-index", "0");
             }
         });
