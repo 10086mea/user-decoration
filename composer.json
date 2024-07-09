@@ -30,8 +30,8 @@
             "category": "feature",
             "icon": {
                 "name": "fas fa-brush",
-                "color": "#ffebee",
-                "backgroundColor": "#ebfffc"
+                "color": "#ec407a",
+                "backgroundColor": "#ffebee"
             },
             "optional-dependencies": [
                 "xypp/store"
@@ -57,10 +57,5 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true,
-    "autoload-dev": {
-        "psr-4": {
-            "Xypp\\UserDecoration\\Tests\\": "tests/"
-        }
-    }
+    "prefer-stable": true
 }

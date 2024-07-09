@@ -7,6 +7,8 @@ import DecorationBox from './DecorationBox';
 import Button from 'flarum/common/components/Button';
 import CreateDecorationModal from './CreateDecorationModal';
 import User from 'flarum/common/models/User';
+import { showIf } from '../utils/nodeUtil';
+import Placeholder from 'flarum/common/components/Placeholder';
 export class DecorationPage extends UserPage {
     loading: boolean = false;
     record: UserOwnDecoration[] | null = null;
@@ -27,7 +29,7 @@ export class DecorationPage extends UserPage {
         return (
             <div className="decoration-page-container">
                 <div class="decoration-page-title">
-                    <h2>{app.translator.trans('xypp-user-decoration.forum.decorations')}</h2>
+                    <h3>{app.translator.trans('xypp-user-decoration.forum.decorations')}</h3>
                     {(app.session.user as any).canCreateDecoration() ? (
                         <Button class="Button Button--primary" onclick={this.create.bind(this)}>
                             <i class="fas fa-plus" />
@@ -39,9 +41,9 @@ export class DecorationPage extends UserPage {
                 </div>
 
                 <div className="decoration-page">
-                    {this.loading ? (
+                    {showIf(this.loading, (
                         <LoadingIndicator display="block" />
-                    ) : (
+                    ), showIf(!!(this.record?.length),
                         this.record?.map((item, index) => {
                             return (
                                 <DecorationBox
@@ -53,8 +55,8 @@ export class DecorationPage extends UserPage {
                                     noEdit={!(app.session.user as any).canCreateDecoration()}
                                 />
                             );
-                        })
-                    )}
+                        }), (<Placeholder text={app.translator.trans("xypp-user-decoration.forum.decoration-no-available")} />)
+                    ))}
                 </div>
             </div>
         );

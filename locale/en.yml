@@ -2,6 +2,7 @@ xypp-user-decoration:
   # For more details on the format
   # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   forum:
+    decoration-no-available: "No decorations available"
     decorations: "Decorations"
     decoration-box:
       error: "Unknown Type"

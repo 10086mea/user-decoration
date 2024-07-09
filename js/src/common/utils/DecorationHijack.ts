@@ -92,7 +92,10 @@ export function initDecorationHijack() {
             if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
                 ctr.css("position", "relative");
             }
-        })
+            if (ctr.length && window.getComputedStyle(ctr[0]).zIndex === "auto") {
+                ctr.css("z-index", "0");
+            }
+        });
     });
     console.log("Decoration Hijack loaded");
 }
