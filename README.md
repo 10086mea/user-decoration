@@ -1,8 +1,15 @@
 # User Decoration
 
+
+![Title Poster](https://ice.frostsky.com/2024/07/11/13334249c820695eb905dcfeecc5a32f.png)
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![Latest Stable Version](https://img.shields.io/packagist/v/xypp/user-decoration.svg)](https://packagist.org/packages/xypp/user-decoration)
+[![Total Downloads](https://img.shields.io/packagist/dt/xypp/user-decoration.svg)](https://packagist.org/packages/xypp/user-decoration)
 
 A [Flarum](http://flarum.org) extension. Add decoration for user avatar/username/posts/usercard.
+
+> Actually, this plugin is more likely to be called "User Based Style Injection Engine"
 
 ## Notice
 
@@ -17,6 +24,28 @@ This plugin provides a way to change the appearance of user components using CSS
 Administrators can create decorations and then grant them to users. Users can see the decorations they have been granted and apply them on their personal home page. Decorations should be in effect anywhere on the forum.
 
 If [xypp/store](https://github.com/zxy19/store) is installed, users can buy decorations from the store!
+
+## Usage
+
+### Add Decoration
+
+Log in with your administrator account, navigate to the user page and click the Decoration button to open the Decoration page. Just click the Add Decoration button in the upper right corner.
+
+### Grant Decoration
+
+Navigate to the user page, click on the control button in the upper right corner, and click on "Offer Decoration".
+
+### Create Item
+
+Navigate to the Store page and click the `Add Item` button in the upper right corner.
+
+After filling out the basic information, select the product provider as `Decoration`.
+
+Once the product has loaded, select the Decoration you want to use as the product below.
+
+If you want Decoration to have a time limit, you can just fill in `Time Limit`.
+
+Please do not fill in the usage limit if you don't have to, this will not have an effect but will cause the user to deduct the number of times it is used from the purchased.
 
 ## Special CSS Mark
 
