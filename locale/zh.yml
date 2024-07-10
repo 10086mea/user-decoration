@@ -12,6 +12,7 @@ xypp-user-decoration:
       card: "用户卡片样式"
       loading: "加载中"
       closed: "已关闭"
+      no-login: "登录以查看预览"
     decoration:
       remove_button: "移除"
       change_button: "修改"

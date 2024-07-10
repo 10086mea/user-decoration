@@ -12,6 +12,7 @@ xypp-user-decoration:
       card: "User Card Style"
       loading: "Loading"
       closed: "Closed"
+      no-login: "Login to preview"
     decoration:
       delete_button: "Delete"
       remove_button: "Remove"

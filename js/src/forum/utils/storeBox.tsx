@@ -1,6 +1,8 @@
 import { extend, override } from 'flarum/common/extend';
 import ForumApplication from 'flarum/forum/ForumApplication';
 import DecorationBox from '../components/DecorationBox';
+import { showIf } from '../utils/nodeUtil';
+import Placeholder from 'flarum/common/components/Placeholder';
 type feApp = (
   provider: string,
   name: string,
@@ -33,7 +35,12 @@ export function storeBox(app: ForumApplication) {
 
       return (
         <div class="decoration-ShowCase">
-          <DecorationBox decoration_id={info.id} type={info.type} noBtn={true} noDelete={true} noEdit={true}></DecorationBox>
+          {
+            showIf(!!(app.session.user),
+              <DecorationBox decoration_id={info.id} type={info.type} noBtn={true} noDelete={true} noEdit={true}></DecorationBox>,
+              <Placeholder text={app.translator.trans('xypp-user-decoration.forum.decoration-box.no-login')} />
+            )
+          }
         </div>
       );
     },
