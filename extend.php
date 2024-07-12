@@ -41,10 +41,7 @@ $ret = [
         ->css(__DIR__ . '/less/forum.less'),
     (new Extend\Frontend('admin'))
         ->js(__DIR__ . '/js/dist/admin.js')
-        ->css(__DIR__ . '/less/admin.less')
-    ,
-    (new Extend\Model(User::class))
-        ->cast("avatar_decoration", "integer"),
+        ->css(__DIR__ . '/less/admin.less'),
     (new Extend\Routes('api'))
         ->get("/user_decoration", "user_decoration.list", ListUserDecorationWithId::class)
         ->get("/user_decoration_all", "user_decoration_all.list", ListUserDecorations::class)
