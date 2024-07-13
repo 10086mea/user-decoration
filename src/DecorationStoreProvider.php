@@ -9,7 +9,7 @@ use Xypp\Store\StoreItem;
 use Xypp\UserDecoration\Utils\UserOwnDecorationUtil;
 use Xypp\Store\Context\PurchaseContext;
 use Xypp\Store\Context\UseContext;
-
+use Xypp\Store\Context\ExpireContext;
 class DecorationStoreProvider extends AbstractStoreProvider
 {
     public $name = "decoration";
@@ -67,7 +67,7 @@ class DecorationStoreProvider extends AbstractStoreProvider
         }
         return true;
     }
-    public function expire(PurchaseHistory $item): bool
+    public function expire(PurchaseHistory $item,ExpireContext $context): bool
     {
         $id = $item->data;
         $model = UserOwnDecoration::find($id);

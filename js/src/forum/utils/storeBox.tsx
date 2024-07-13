@@ -3,17 +3,11 @@ import ForumApplication from 'flarum/forum/ForumApplication';
 import DecorationBox from '../components/DecorationBox';
 import { showIf } from '../utils/nodeUtil';
 import Placeholder from 'flarum/common/components/Placeholder';
-type feApp = (
-  provider: string,
-  name: string,
-  getProviderData: (providerDatas: { [key: string]: string }) => Promise<void>,
-  getShowCase: (item: any) => any,
-  getUseData: (item: any) => Promise<string>
-) => void;
+import Store from "./StoreHelper"
 export function storeBox(app: ForumApplication) {
-  (flarum.extensions['xypp-store'].addFrontendProviders as feApp)(
+  Store.addFrontendProviders(
     "decoration", app.translator.trans("xypp-store.forum.create-modal.providers.decoration") as string,
-    async function getProviderData(providerDatas) {
+    async function getProviderData(providerDatas, special) {
       await app.store.find('user_decoration_all');
       app.store.all('user-decorations').forEach((decoration) => {
         providerDatas[parseInt(decoration.id() as string)] =
