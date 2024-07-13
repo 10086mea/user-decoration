@@ -173,8 +173,13 @@ function hijackViewHandler(vnode: any) {
     }
     return vnodeTree;
 }
-function hijackView(parent: Mithril.Vnode<any> | null, root: Mithril.Vnode<any>, stopAt: Mithril.Vnode<any>, ctx: any) {
+function hijackView(parent: any, root: any, stopAt: Mithril.Vnode<any>, ctx: any) {
     if (root === stopAt) return;
+    if (typeof root === "object" && root['forEach']) {
+        root.forEach((child: any) => {
+            child && hijackView({ children: root }, child, stopAt, ctx);
+        });
+    }
     if (parent && vnodeIsAvatar(root)) {
         parent.children = (parent.children as Mithril.Vnode<any>[]).map((child) => {
             if (child === root) {
