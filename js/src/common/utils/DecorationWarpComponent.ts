@@ -1,3 +1,13 @@
+export function makeWarpComponent(VNode: any, str: string, data: any, containerClass: string) {
+    return new Proxy(new DecorationWarpComponent(VNode, str, data, containerClass), {
+        get(target: any, prop: any) {
+            if (target.hasOwnProperty(prop) || prop == 'toString') {
+                return target[prop];
+            }
+            return target.stringRet[prop];
+        }
+    });
+}
 export class DecorationWarpComponent {
     states: any;
     attrs: any;

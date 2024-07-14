@@ -10,7 +10,7 @@ import ColorThief, { Color } from "color-thief-browser";
 import Mithril, { Vnode } from "mithril";
 import Post from "flarum/forum/components/Post";
 import UserCard from "flarum/forum/components/UserCard";
-import { DecorationWarpComponent } from "./DecorationWarpComponent";
+import { DecorationWarpComponent, makeWarpComponent } from "./DecorationWarpComponent";
 var globalUserDecorationHijackIid = 0;
 
 function usernameHijack() {
@@ -64,7 +64,7 @@ export function initDecorationHijack() {
 
     override(User.prototype, "displayName", function (orgUserName) {
         if (!usernameHijack()) return orgUserName();
-        return new DecorationWarpComponent({
+        return makeWarpComponent({
             tag: "span",
             attrs: {
                 className: "username-container",
