@@ -69,7 +69,7 @@ let Store: {
     addFrontendProviders: feApp,
     PurchaseHelper: cPurchaseHelper
     UseHelper: cUseHelper
-} = {
+} | undefined = flarum.extensions['xypp-store'] && {
     addFrontendProviders: flarum.extensions['xypp-store'].addFrontendProviders as any,
     PurchaseHelper: flarum.extensions['xypp-store'].PurchaseHelper as any,
     UseHelper: flarum.extensions['xypp-store'].UseHelper as any
