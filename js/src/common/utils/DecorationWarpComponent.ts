@@ -4,6 +4,9 @@ export function makeWarpComponent(VNode: any, str: string, data: any, containerC
             if (target.hasOwnProperty(prop) || prop == 'toString') {
                 return target[prop];
             }
+            if (typeof target.stringRet[prop] === "function") {
+                return target.stringRet[prop].bind(target.stringRet);
+            }
             return target.stringRet[prop];
         }
     });
