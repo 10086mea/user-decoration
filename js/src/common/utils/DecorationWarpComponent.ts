@@ -40,6 +40,9 @@ export class DecorationWarpComponent {
                 }]
             }
         ]
+        if (VNode.children) {
+            this.children = VNode.children;
+        }
         this.data = data;
     }
     toString() {

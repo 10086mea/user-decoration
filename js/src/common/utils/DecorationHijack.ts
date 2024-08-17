@@ -10,7 +10,12 @@ import ColorThief, { Color } from "color-thief-browser";
 import Mithril, { Vnode } from "mithril";
 import Post from "flarum/forum/components/Post";
 import UserCard from "flarum/forum/components/UserCard";
+import UsersSearchResults from "flarum/forum/components/UsersSearchSource"
 import { DecorationWarpComponent, makeWarpComponent } from "./DecorationWarpComponent";
+import username from "flarum/common/helpers/username";
+import highlight from "flarum/common/helpers/highlight";
+
+
 var globalUserDecorationHijackIid = 0;
 
 function usernameHijack() {
@@ -143,6 +148,28 @@ export function initDecorationExtend() {
         if (this.attrs.decoration_id) infoElem.decorationId = this.attrs.decoration_id;
         applyDecoration(infoElem, this);
         return tree;
+    })
+
+    override(UsersSearchResults.prototype, "view", function (this: UsersSearchResults, o, a: string) {
+        let nodes = o(a);
+        for (let i = 1; i < nodes.length; i++) {
+            const children = nodes[i];
+            const child = children.children[0];
+            const uid: number = parseInt((children.attrs["data-index"] as string || "").substring(5));
+            const user: User | undefined = StyleFetcher.getInstance()?.getApp()?.store.getById<User>("users", uid + "");
+            if (!user) return;
+            const inner = highlight(user.displayName(),a);
+            const node: DecorationWarpComponent = new DecorationWarpComponent({
+                children: [inner],
+                tag: "span",
+                attrs: {
+                    className: "username-container",
+                    user: this
+                }
+            }, user.displayName(), { user }, "username-text");
+            child.children[1].children = [node];
+        }
+        return nodes;
     })
 }
 function hijackOnBeforeUpdate(...a: any) {
