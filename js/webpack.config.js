@@ -1,3 +1,3 @@
 module.exports = require('flarum-webpack-config')({
-    useExtensions: ['xypp-store']
+    useExtensions: ['xypp-store', 'flarum-mentions'],
 });

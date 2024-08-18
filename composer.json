@@ -10,7 +10,8 @@
         "flarum/core": "^1.2.0"
     },
     "require-dev": {
-        "xypp/store": "*"
+        "xypp/store": "*",
+        "flarum/mentions": "^1.8"
     },
     "authors": [
         {
@@ -34,7 +35,8 @@
                 "backgroundColor": "#ffebee"
             },
             "optional-dependencies": [
-                "xypp/store"
+                "xypp/store",
+                "flarum/mentions"
             ]
         },
         "flarum-cli": {

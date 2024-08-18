@@ -15,7 +15,6 @@ import { DecorationWarpComponent, makeWarpComponent } from "./DecorationWarpComp
 import username from "flarum/common/helpers/username";
 import highlight from "flarum/common/helpers/highlight";
 
-
 var globalUserDecorationHijackIid = 0;
 
 function usernameHijack() {
@@ -150,6 +149,9 @@ export function initDecorationExtend() {
         return tree;
     })
 
+    /**
+     * 搜索框兼容
+     */
     override(UsersSearchResults.prototype, "view", function (this: UsersSearchResults, o, a: string) {
         let nodes = o(a);
         for (let i = 1; i < nodes.length; i++) {
@@ -158,7 +160,7 @@ export function initDecorationExtend() {
             const uid: number = parseInt((children.attrs["data-index"] as string || "").substring(5));
             const user: User | undefined = StyleFetcher.getInstance()?.getApp()?.store.getById<User>("users", uid + "");
             if (!user) return;
-            const inner = highlight(user.displayName(),a);
+            const inner = highlight(user.displayName(), a);
             const node: DecorationWarpComponent = new DecorationWarpComponent({
                 children: [inner],
                 tag: "span",
@@ -170,7 +172,26 @@ export function initDecorationExtend() {
             child.children[1].children = [node];
         }
         return nodes;
-    })
+    });
+    if (flarum.extensions["flarum-mentions"]) {
+        override((StyleFetcher.getInstance()?.getApp() as any)
+            .mentionFormats.get("@").mentionables.find((e: any) => e.name == "u")
+            .prototype, "suggestion", (function (o: any, user: User, type: string) {
+                const nodes = o(user, type);
+                if (nodes.tag != '[') return nodes;
+                const inner = highlight(user.displayName(), type);
+                const innerNode: DecorationWarpComponent = new DecorationWarpComponent({
+                    children: [inner],
+                    tag: "span",
+                    attrs: {
+                        className: "username-container",
+                        user: user
+                    }
+                }, user.displayName(), { user }, "username-text");
+                nodes.children[1].children = [innerNode];
+                return nodes;
+            }) as any)
+    }
 }
 function hijackOnBeforeUpdate(...a: any) {
     //@ts-ignore
