@@ -16,7 +16,12 @@ import username from "flarum/common/helpers/username";
 import highlight from "flarum/common/helpers/highlight";
 
 var globalUserDecorationHijackIid = 0;
-
+var noDecorateClassFilter: string[] | null = null;
+function loadNoDecorateClassFilter() {
+    if (noDecorateClassFilter !== null) return;
+    noDecorateClassFilter = (StyleFetcher.getInstance()?.getApp().forum?.attribute<string>("no_decorate_class_filter") || "").split("\n");
+    noDecorateClassFilter = noDecorateClassFilter.map(v => v.trim()).filter(v => v !== "");
+}
 function usernameHijack() {
     return StyleFetcher.getInstance()?.getApp().forum?.attribute("username_hijack");
 }
@@ -112,10 +117,14 @@ export function initDecorationExtend() {
         //@ts-ignore
         const tree: any = o(a);
         //@ts-ignore
+        const user = this.attrs.post?.user();
+        // For deleted user/anonymous user.
+        if (!user) {
+            return tree;
+        }
+        //@ts-ignore
         tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
         tree.attrs.className = (tree.attrs.className || "") + " decoration-container"
-        //@ts-ignore
-        const user = this.attrs.post.user();
         const infoElem: userElementInfo = {
             username: user.realUserName(),
             container: tree,
@@ -211,34 +220,50 @@ function hijackViewHandler(vnode: any) {
     //@ts-ignore
     const vnodeTree = (this as any).originalView(vnode);
     if (!vnodeTree) return vnodeTree;
+    if (!noDecorateClassFilter) loadNoDecorateClassFilter();
     if (vnodeIsAvatar(vnodeTree)) {
         //@ts-ignore
-        return createWrappedAvatar(vnodeTree, this);
+        return createWrappedAvatar(vnodeTree, this, false);
+    }
+    if (vnodeIsUsername(vnodeTree)) {
+        //@ts-ignore
+        return createWrappedUserName(vnodeTree, this, false);
     }
     else {
         //@ts-ignore
-        hijackView(null, vnodeTree, vnode, this);
+        hijackView(null, vnodeTree, vnode, this, false);
     }
     return vnodeTree;
 }
-function hijackView(parent: any, root: any, stopAt: Mithril.Vnode<any>, ctx: any) {
+function hijackView(parent: any, root: any, stopAt: Mithril.Vnode<any>, ctx: any, noDecorate: boolean) {
     if (root === stopAt) return;
+    if (!noDecorate && noDecorateClassFilter.length) {
+        ((root.attrs?.className || "") as string).split(" ").forEach((element: string) => {
+            if (noDecorateClassFilter.includes(element)) {
+                noDecorate = true;
+            }
+        });
+    }
     if (typeof root === "object" && root['forEach']) {
         root.forEach((child: any) => {
-            child && hijackView({ children: root }, child, stopAt, ctx);
+            child && hijackView({ children: root }, child, stopAt, ctx, noDecorate);
         });
     }
     if (parent && vnodeIsAvatar(root)) {
         parent.children = (parent.children as Mithril.Vnode<any>[]).map((child) => {
             if (child === root) {
-                return createWrappedAvatar(child, ctx);
+                return createWrappedAvatar(child, ctx, noDecorate);
             } else return child;
         });
     } else if (parent && vnodeIsUsername(root)) {
-        createWrappedUserName(root, ctx);
+        parent.children = (parent.children as Mithril.Vnode<any>[]).map((child) => {
+            if (child === root) {
+                return createWrappedUserName(root, ctx, noDecorate);
+            } else return child;
+        });
     } else if (typeof root.children === 'object' && root.children['forEach']) {
         root.children.forEach((child: any) => {
-            child && hijackView(root, child, stopAt, ctx);
+            child && hijackView(root, child, stopAt, ctx, noDecorate);
         });
     }
 }
@@ -248,7 +273,7 @@ function vnodeIsAvatar(vnode: any): boolean {
 function vnodeIsUsername(vnode: any): boolean {
     return vnode && vnode instanceof DecorationWarpComponent && vnode.attrs.className == "username-container";
 }
-function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any) {
+function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any, noDecorate: boolean) {
     const attrData = vnode.attrs.src.split("#");
     if (attrData.length != 2) return vnode;
     let toWarp: Mithril.Vnode<any, any> = vnode
@@ -271,6 +296,9 @@ function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any) {
         }
     }
     toWarp.attrs.src = avatarUrl;
+
+    if (noDecorate) return toWarp;
+
     const ctr: Mithril.Vnode<any, any> = {
         tag: "span",
         attrs: {
@@ -291,14 +319,16 @@ function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any) {
     applyDecoration(userInfo, ctx);
     return ctr;
 }
-function createWrappedUserName(vnode: any, ctx: any) {
+function createWrappedUserName(vnode: any, ctx: any, noDecorate: boolean) {
     const user = vnode.data.user;
+    if (noDecorate) return username(user);
     const userInfo: userElementInfo = {
         decorationId: user.attribute("name_decoration"),
         username: user.attribute("username"),
         container: vnode
     };
     applyDecoration(userInfo, ctx);
+    return vnode;
 }
 function calculateAvatarColor(user: User, avatarUrl: string) {
     const image = new Image();

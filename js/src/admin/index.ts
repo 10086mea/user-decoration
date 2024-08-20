@@ -22,6 +22,13 @@ app.initializers.add('xypp/user-decoration', () => {
       help: app.translator.trans('xypp-user-decoration.admin.settings.view-all.desc'),
       default: true,
     })
+    .registerSetting({
+      setting: 'xypp-user-decoration.no_decorate_class_filter',
+      type: 'textarea',
+      label: app.translator.trans('xypp-user-decoration.admin.settings.no_decorate_class_filter.title'),
+      help: app.translator.trans('xypp-user-decoration.admin.settings.no_decorate_class_filter.desc'),
+      default: "",
+    })
     .registerPermission({
       icon: 'fas fa-brush',
       label: app.translator.trans('xypp-user-decoration.admin.permissions.offer_decoration'),

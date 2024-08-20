@@ -11,7 +11,6 @@ import Button from 'flarum/common/components/Button';
 import User from 'flarum/common/models/User';
 import Model from 'flarum/common/Model';
 import { storeBox } from './utils/storeBox';
-
 app.initializers.add('xypp/user-decoration', () => {
   //@ts-ignore
   User.prototype.canOfferDecoration = Model.attribute('canOfferDecoration');

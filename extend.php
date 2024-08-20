@@ -63,7 +63,9 @@ $ret = [
     (new Extend\Settings())
         ->default('xypp-user-decoration.username_hijack', true)
         ->default('xypp-user-decoration.avatar_hijack', true)
-        ->default('xypp-user-decoration.view-all', true),
+        ->default('xypp-user-decoration.view-all', true)
+        ->default('xypp-user-decoration.no_decorate_class_filter', "")
+        ->serializeToForum('no_decorate_class_filter', "xypp-user-decoration.no_decorate_class_filter"),
 ];
 if (class_exists("\\Xypp\\Store\\Extend\\StoreItemProvider")) {
     $ret[] = (new \Xypp\Store\Extend\StoreItemProvider())->provide(DecorationStoreProvider::class);

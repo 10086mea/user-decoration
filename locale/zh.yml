@@ -64,6 +64,9 @@ xypp-user-decoration:
       view-all:
         title: "查看所有"
         desc: "查看所有的装饰的权限是否生效"
+      no_decorate_class_filter:
+        title: "不装饰类名"
+        desc: "使下列类名中的头像/用户名不被装扮包装，一行一个，不需要写前面的."
 xypp-store:
   forum:
     type:
