@@ -31,7 +31,7 @@ function avatarHijack() {
 let timer: any = 0;
 function injectPositionCss() {
     if (timer) return;
-    timer = setTimeout(injectPositionCssAfterTick, 0);
+    timer = setTimeout(injectPositionCssAfterTick, 20);
 }
 function injectPositionCssAfterTick() {
     timer = 0;
