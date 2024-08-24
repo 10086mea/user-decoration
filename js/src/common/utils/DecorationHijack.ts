@@ -28,7 +28,25 @@ function usernameHijack() {
 function avatarHijack() {
     return StyleFetcher.getInstance()?.getApp().forum?.attribute("avatar_hijack");
 }
-
+let timer: any = 0;
+function injectPositionCss() {
+    if (timer) return;
+    timer = setTimeout(injectPositionCssAfterTick, 10);
+}
+function injectPositionCssAfterTick() {
+    timer = 0;
+    const ctr = $(`.decoration-container`);
+    ctr.each((_, el) => {
+        const ctr = $(el);
+        if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
+            ctr.css("position", "relative");
+        }
+        // User card and post component has controls a large amount of elements and setting z-index may cause many problems.
+        if (ctr.length && !ctr.hasClass("Post") && !ctr.hasClass("UserCard") && window.getComputedStyle(ctr[0]).zIndex === "auto") {
+            ctr.css("z-index", "0");
+        }
+    });
+}
 export function initDecorationHijack() {
     const originalUserAvatar = User.prototype.avatarUrl;
     //@ts-ignore
@@ -95,17 +113,7 @@ export function initDecorationHijack() {
 
     // This function should be save and not to control it.
     extend(Component.prototype, ['onupdate', "oncreate"], async function () {
-        const ctr = $(`.decoration-container`);
-        ctr.each((_, el) => {
-            const ctr = $(el);
-            if (ctr.length && !["absolute", "fixed", "relative"].includes(window.getComputedStyle(ctr[0]).position)) {
-                ctr.css("position", "relative");
-            }
-            // User card and post component has controls a large amount of elements and setting z-index may cause many problems.
-            if (ctr.length && !ctr.hasClass("Post") && !ctr.hasClass("UserCard") && window.getComputedStyle(ctr[0]).zIndex === "auto") {
-                ctr.css("z-index", "0");
-            }
-        });
+        injectPositionCss();
     });
     console.log("Decoration Hijack loaded");
 }
