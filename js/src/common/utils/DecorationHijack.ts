@@ -45,6 +45,9 @@ function injectPositionCssAfterTick() {
         if (ctr.length && !ctr.hasClass("Post") && !ctr.hasClass("UserCard") && window.getComputedStyle(ctr[0]).zIndex === "auto") {
             ctr.css("z-index", "0");
         }
+        if (ctr.hasClass("before-positioning")) {
+            ctr.removeClass("before-positioning");
+        }
     });
 }
 export function initDecorationHijack() {
@@ -94,7 +97,7 @@ export function initDecorationHijack() {
         return makeWarpComponent({
             tag: "span",
             attrs: {
-                className: "username-container",
+                className: "username-container decoration-container before-positioning",
                 user: this
             }
         }, orgUserName(), { user: this }, "username-text");
@@ -132,7 +135,7 @@ export function initDecorationExtend() {
         }
         //@ts-ignore
         tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
-        tree.attrs.className = (tree.attrs.className || "") + " decoration-container"
+        tree.attrs.className = (tree.attrs.className || "") + " decoration-container before-positioning"
         const infoElem: userElementInfo = {
             username: user.realUserName(),
             container: tree,
@@ -151,7 +154,7 @@ export function initDecorationExtend() {
         const tree: any = o(a);
         //@ts-ignore
         tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
-        tree.attrs.className = (tree.attrs.className || "") + " decoration-container"
+        tree.attrs.className = (tree.attrs.className || "") + " decoration-container before-positioning"
         //@ts-ignore
         const user = this.attrs.user;
         const infoElem: userElementInfo = {
@@ -316,7 +319,7 @@ function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any, noDecorat
         children: [toWarp]
     };
     ctr.attrs.style = toWarp.attrs.style;
-    ctr.attrs.className = (toWarp.attrs.className ?? "") + " Avatar-container decoration-container";
+    ctr.attrs.className = (toWarp.attrs.className ?? "") + " Avatar-container decoration-container before-positioning";
     ctr.attrs['data-userDecorationHijackIid'] = ctx.userDecorationHijackIid;
     //@ts-ignore
     if (ctx.appendRelative) {
