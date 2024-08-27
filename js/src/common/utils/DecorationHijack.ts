@@ -248,9 +248,9 @@ function hijackViewHandler(vnode: any) {
 }
 function hijackView(parent: any, root: any, stopAt: Mithril.Vnode<any>, ctx: any, noDecorate: boolean) {
     if (root === stopAt) return;
-    if (!noDecorate && noDecorateClassFilter.length) {
+    if (!noDecorate && noDecorateClassFilter?.length) {
         ((root.attrs?.className || "") as string).split(" ").forEach((element: string) => {
-            if (noDecorateClassFilter.includes(element)) {
+            if (noDecorateClassFilter!.includes(element)) {
                 noDecorate = true;
             }
         });
