@@ -282,7 +282,7 @@ function vnodeIsAvatar(vnode: any): boolean {
     return vnode && vnode.tag == "img" && vnode.attrs.className?.includes("Avatar") && /( |^)Avatar( |$)/.test(vnode.attrs.className) && (vnode.attrs as any).src;
 }
 function vnodeIsUsername(vnode: any): boolean {
-    return vnode && vnode instanceof DecorationWarpComponent && vnode.attrs.className == "username-container";
+    return vnode && vnode instanceof DecorationWarpComponent && ((vnode.attrs.className||"")+"").includes("username-container");
 }
 function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any, noDecorate: boolean) {
     const attrData = vnode.attrs.src.split("#");
