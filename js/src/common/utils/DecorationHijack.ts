@@ -52,9 +52,9 @@ function injectPositionCssAfterTick() {
 }
 export function initDecorationHijack() {
     const originalUserAvatar = User.prototype.avatarUrl;
-    //@ts-ignore
+
     User.prototype.realAvatarUrl = originalUserAvatar;
-    //@ts-ignore
+
     User.prototype.hijackColor = function () {
         return computed<string, User>('displayName', 'realAvatarUrl', 'avatarColor', (displayName, avatarUrl, avatarColor) => {
             if (avatarColor) {
@@ -66,9 +66,11 @@ export function initDecorationHijack() {
             return '#' + stringToColor(displayName as string);
         }).call(this);
     };
+    User.prototype.color = User.prototype.hijackColor;
+    
     override(User.prototype, "avatarUrl", function () {
         if (!avatarHijack()) return originalUserAvatar.call(this);
-        //@ts-ignore
+
         let color = this.hijackColor();
         if (color && !!(color['charAt'])) {
             color = color.replace(/#/g, '@');
@@ -76,20 +78,20 @@ export function initDecorationHijack() {
         const encodedUserInfo: string = JSON.stringify({
             decorationId: this.data.attributes?.avatar_decoration,
             username: this.username(),
-            //@ts-ignore
+
             displayName: this.realDisplayName(),
             id: this.id(),
             color
         });
-        //@ts-ignore
+
         return (originalUserAvatar.call(this) || "").split("#").pop() + "#" + encodedUserInfo;
     });
 
 
     const originalUserName = User.prototype.username;
-    //@ts-ignore
+
     User.prototype.realUserName = originalUserName;
-    //@ts-ignore
+
     User.prototype.realDisplayName = User.prototype.displayName;
 
     override(User.prototype, "displayName", function (orgUserName) {
@@ -123,17 +125,13 @@ export function initDecorationHijack() {
 
 export function initDecorationExtend() {
     override(Post.prototype, "view", function (o, ...a) {
-        //@ts-ignore
         this.userDecorationHijackIid = this.userDecorationHijackIid || (globalUserDecorationHijackIid++);
-        //@ts-ignore
         const tree: any = o(a);
-        //@ts-ignore
         const user = this.attrs.post?.user();
         // For deleted user/anonymous user.
         if (!user) {
             return tree;
         }
-        //@ts-ignore
         tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
         tree.attrs.className = (tree.attrs.className || "") + " decoration-container before-positioning"
         const infoElem: userElementInfo = {
@@ -142,28 +140,25 @@ export function initDecorationExtend() {
             id: user.id(),
             decorationId: user.attribute("post_decoration")
         }
-        //@ts-ignore
         if (this.attrs.decoration_id) infoElem.decorationId = this.attrs.decoration_id;
         applyDecoration(infoElem, this);
         return tree;
     })
-    override(UserCard.prototype, "view", function (o, ...a) {
-        //@ts-ignore
+    override(UserCard.prototype, "view", function (this: UserCard, o: any, ...a: any) {
         this.userDecorationHijackIid = this.userDecorationHijackIid || (globalUserDecorationHijackIid++);
-        //@ts-ignore
         const tree: any = o(a);
-        //@ts-ignore
+
         tree.attrs['data-userDecorationHijackIid'] = this.userDecorationHijackIid;
         tree.attrs.className = (tree.attrs.className || "") + " decoration-container before-positioning"
-        //@ts-ignore
-        const user = this.attrs.user;
+
+        const user: User = (this.attrs as any).user;
         const infoElem: userElementInfo = {
             username: user.realUserName(),
             container: tree,
-            id: user.id(),
+            id: parseInt(user.id()!),
             decorationId: user.attribute("card_decoration")
         }
-        //@ts-ignore
+        // @ts-ignore
         if (this.attrs.decoration_id) infoElem.decorationId = this.attrs.decoration_id;
         applyDecoration(infoElem, this);
         return tree;
@@ -213,12 +208,12 @@ export function initDecorationExtend() {
             }) as any)
     }
 }
-function hijackOnBeforeUpdate(...a: any) {
-    //@ts-ignore
+function hijackOnBeforeUpdate(this: Component, ...a: any) {
+
     const injected = this.$(".user-decoration-hijack-wait-reload").length !== 0 || $(this.element).hasClass("user-decoration-hijack-wait-reload");
-    //@ts-ignore
+
     $(this.element).removeClass("user-decoration-hijack-wait-reload");
-    //@ts-ignore
+
     if (this.originalOnBefUp.apply(this, a) === false) {
         if (injected) {
             return;
@@ -227,21 +222,21 @@ function hijackOnBeforeUpdate(...a: any) {
     }
     return;
 }
-function hijackViewHandler(vnode: any) {
-    //@ts-ignore
+function hijackViewHandler(this: Component, vnode: any) {
+
     const vnodeTree = (this as any).originalView(vnode);
     if (!vnodeTree) return vnodeTree;
     if (!noDecorateClassFilter) loadNoDecorateClassFilter();
     if (vnodeIsAvatar(vnodeTree)) {
-        //@ts-ignore
+
         return createWrappedAvatar(vnodeTree, this, false);
     }
     if (vnodeIsUsername(vnodeTree)) {
-        //@ts-ignore
+
         return createWrappedUserName(vnodeTree, this, false);
     }
     else {
-        //@ts-ignore
+
         hijackView(null, vnodeTree, vnode, this, false);
     }
     return vnodeTree;
@@ -282,7 +277,7 @@ function vnodeIsAvatar(vnode: any): boolean {
     return vnode && vnode.tag == "img" && vnode.attrs.className?.includes("Avatar") && /( |^)Avatar( |$)/.test(vnode.attrs.className) && (vnode.attrs as any).src;
 }
 function vnodeIsUsername(vnode: any): boolean {
-    return vnode && vnode instanceof DecorationWarpComponent && ((vnode.attrs.className||"")+"").includes("username-container");
+    return vnode && vnode instanceof DecorationWarpComponent && ((vnode.attrs.className || "") + "").includes("username-container");
 }
 function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any, noDecorate: boolean) {
     const attrData = vnode.attrs.src.split("#");
@@ -321,7 +316,7 @@ function createWrappedAvatar(vnode: Mithril.Vnode<any, any>, ctx: any, noDecorat
     ctr.attrs.style = toWarp.attrs.style;
     ctr.attrs.className = (toWarp.attrs.className ?? "") + " Avatar-container decoration-container before-positioning";
     ctr.attrs['data-userDecorationHijackIid'] = ctx.userDecorationHijackIid;
-    //@ts-ignore
+
     if (ctx.appendRelative) {
         ctr.attrs.style = (ctr.attrs.style ?? "") + ";position:relative;"
     }
@@ -346,13 +341,13 @@ function calculateAvatarColor(user: User, avatarUrl: string) {
     image.addEventListener('load', function (this: HTMLImageElement) {
         try {
             const colorThief = new ColorThief();
-            //@ts-ignore
+            // @ts-ignore
             user.avatarColor = colorThief.getColor(this);
         } catch (e) {
             // Completely white avatars throw errors due to a glitch in color thief
             // See https://github.com/lokesh/color-thief/issues/40
             if (e instanceof TypeError) {
-                //@ts-ignore
+                // @ts-ignore
                 user.avatarColor = [255, 255, 255];
             } else {
                 throw e;

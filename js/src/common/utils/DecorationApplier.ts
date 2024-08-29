@@ -6,6 +6,7 @@ import { StyleFetcher } from "../data/styleFetcher";
 /**
  * 在用户界面对象上应用样式
  * @param elementInfo 用户界面元素对象.由各种事件中直接获取包装得到.
+ * @param ctx 一般为根component的VNode
  */
 export function applyDecoration(elementInfo: userElementInfo, ctx: any) {
     if (!elementInfo.decoration) {
@@ -234,4 +235,12 @@ export function applyDecorationOn(element: Mithril.Vnode<any>, decoration: UserD
         element.attrs.className += ` user-decoration-${decId}`;
     if (!/( |^)has-user-decoration( |$)/.test(element.attrs.className))
         element.attrs.className += ` has-user-decoration`;
+}
+
+export function reloadStyleElement(id: number) {
+    if (elementCreations[id]) {
+        $(`#user-decoration-${id}`).remove();
+        delete elementCreations[id];
+        m.redraw();
+    }
 }

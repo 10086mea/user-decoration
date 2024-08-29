@@ -8,6 +8,7 @@ import DecorationBox from './DecorationBox';
 import UserDecorations from '../../common/models/UserDecorations';
 import { StyleFetcher } from '../../common/data/styleFetcher';
 import LinkButton from 'flarum/common/components/LinkButton';
+import { reloadStyleElement } from '../../common';
 export default class CreateDecorationModal extends Modal {
   loading = false;
   decorationId: string = '';
@@ -89,7 +90,7 @@ export default class CreateDecorationModal extends Modal {
     e.preventDefault();
     this.loading = true;
     try {
-      await app.request({
+      const payload = await app.request<any>({
         url: app.forum.attribute('apiUrl') + '/user_decoration',
         method: 'POST',
         body: {
@@ -102,6 +103,8 @@ export default class CreateDecorationModal extends Modal {
           },
         },
       });
+      app.store.pushPayload(payload);
+      reloadStyleElement(parseInt(this.decorationId));
       app.modal.close();
       app.alerts.show({ type: 'success' }, app.translator.trans('xypp-user-decoration.forum.create-success'));
 
