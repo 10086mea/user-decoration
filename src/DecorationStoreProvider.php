@@ -16,6 +16,7 @@ class DecorationStoreProvider extends AbstractStoreProvider
     public $canSeeInHistory = true;
     public $canUse = true;
     public $singleHold = true;
+    public $canUseFrontend = true;
     public function useItem(PurchaseHistory $item, User $user, string $data, UseContext $context): bool
     {
         try {
